@@ -277,11 +277,11 @@ void interfaceBoard()
 
 void desctop()
 {
-    joy.updatePositionXY();
+    joy.updatePositionXY(25); //Serial.print((String)analogRead(34) + " | "); Serial.println((String)analogRead(35));
 
     gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
     iconSapper.shortcut(sapper_bits, 5, 30, gamePong, joy.posX0, joy.posY0);
-    crs1.cursor(true, joy.posX0, joy.posY0);
+    crs1.cursor(true, joy.posX0, joy.posY0); //Serial.println(joy.posX0); Serial.println(joy.posY0);
 }
 
 void setup()
@@ -289,17 +289,7 @@ void setup()
     gfx.initializationSystem();
 }
 
-void setup1()
-{
-    //Your code to run on the second core
-}
-
 void loop()
 {
-    interfaceBoard();
-}
-
-void loop1()
-{  
-    //Your code to run on the second core
+    //interfaceBoard();
 }

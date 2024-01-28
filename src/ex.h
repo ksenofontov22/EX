@@ -24,7 +24,7 @@ class Joystick
 protected:
 private:
     /* The sticks are in the middle position. */
-    int DEF_RES_Y0{2100}, DEF_RES_Y1{2100}, DEF_RES_X0{2100}, DEF_RES_X1{2100};
+    int DEF_RES_Y0{1840}, DEF_RES_Y1{1840}, DEF_RES_X0{1840}, DEF_RES_X1{1840};
     /* Correction on the y0-axis. */
     const int8_t CORR_Y0{100}, CORR_Y1{100}, CORR_X0{100}, CORR_X1{100};
     /* Initial setting of coordinates. */
@@ -36,6 +36,7 @@ private:
     int OBJ_Y0{}, OBJ_Y1{}, OBJ_X0{}, OBJ_X1{};
     /* Raw data from Sticks. */
     int RAW_DATA_Y0{}, RAW_DATA_Y1{}, RAW_DATA_X0{}, RAW_DATA_X1{};
+    unsigned long prevTime{};
 public:
     /* Contains the coordinates of the Sticks along the axes. */
     int calculatePositionX0();
@@ -52,6 +53,8 @@ public:
 
     /* Updating Stick coordinates. */
     void updatePositionXY();
+    /* Updating Stick coordinates. And delay update position. */
+    void updatePositionXY(uint delay);
 
     /* Counts objects by +1, normally 0 */
     int8_t calculateIndexY0();
