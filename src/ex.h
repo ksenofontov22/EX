@@ -17,7 +17,7 @@
 /* We let the compiler know that the u8g2 object is defined in another file */
 extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const uint8_t gears_bits[];
-extern int HEIGHT_LCD, WIDTH_LCD;
+extern int H_LCD, W_LCD;
 
 class Joystick
 {
@@ -28,10 +28,10 @@ private:
     /* Correction on the y0-axis. */
     const int8_t CORR_Y0{100}, CORR_Y1{100}, CORR_X0{100}, CORR_X1{100};
     /* Initial setting of coordinates. */
-    int COOR_Y0 = HEIGHT_LCD / 2; 
-    int COOR_Y1 = HEIGHT_LCD / 2;
-    int COOR_X0 = WIDTH_LCD  / 2;
-    int COOR_X1 = WIDTH_LCD  / 2;
+    int COOR_Y0 = 80;  // h/2
+    int COOR_Y1 = 80;
+    int COOR_X0 = 128; // w/2
+    int COOR_X1 = 128;
     /* Reset the counter of objects. */
     int OBJ_Y0{}, OBJ_Y1{}, OBJ_X0{}, OBJ_X1{};
     /* Raw data from Sticks. */
@@ -118,8 +118,6 @@ class Interface
 {
 private:
 public:
-    /* Greetings. Contains logo and text. */
-    void greetingsBoard();
     /* Output of a message to the user. Define the text-text and duration-duration.
        Line break is supported - '\n'. */
     void message(String text, int duration);
