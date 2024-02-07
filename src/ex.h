@@ -67,6 +67,7 @@ class Graphics
 {
 protected:
 private:
+    int image_width{}, image_height{};
 public:
     /* Turn on the backlight of the LCD screen. 1 enabled, 0 disabled. */
     void controlBacklight(bool state);

@@ -168,6 +168,7 @@ Joystick joy;
 Graphics gfx;
 Cursor crs1;
 Shortcut iconSapper, iconGears;
+Screensaver scr;
 
 bool stateGame = false;
 
@@ -291,5 +292,5 @@ void setup()
 
 void loop()
 {
-    //interfaceBoard();
+    interfaceBoard();   scr.screensaver(true, 10000);
 }

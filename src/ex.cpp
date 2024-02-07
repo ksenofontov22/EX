@@ -91,10 +91,12 @@ void Graphics::initializationSystem()
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
     digitalWrite(PIN_BACKLIGHT_LCD, true);
     //platform logo output
+    image_width = windows_width;
+    image_height = windows_height;
     //--
     u8g2.clearBuffer();
-    u8g2.drawXBMP(((W_LCD - a_width)/2), ((H_LCD - a_height)/2), a_width, a_height, a_bits); //88 88
-    _gfx.print(10, "the EXperience system", 65, ((H_LCD/2) + 18 + 13), 10, 6);
+    u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, windows_bits); //88 88
+    _gfx.print(10, "the experience system", 65, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] , 0, H_LCD, 10, 4);
     u8g2.sendBuffer();
     //--
@@ -640,9 +642,8 @@ void Terminal::terminal()
 /* The function checks whether the joystick or button is pressed at a certain moment */
 bool Screensaver::isTouched()
 {
-  if ((calculateIndexY0() == 0) && (calculateIndexY1() == 0) && 
-      (calculateIndexX0() == 0) && (calculateIndexX1() == 0) && 
-      (pressKeyA() == 0) && (pressKeyB() == 0))
+  if ((calculateIndexY0() == 0) && (calculateIndexX0() == 0) /*&& 
+      (pressKeyA() == 0) && (pressKeyB() == 0)*/)
   {
     return true;
   }
@@ -661,9 +662,8 @@ void sleepModeText()
     //sleepTextY = random(10, 58);  // 64 px - 10 px
   }
   
-  u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2 - 7), windows_width, windows_height, windows_bits);
-  _gfx.print(10, "EX 2024", 25, 50, 8, 6);
-  _gfx.print(8, "t.me/execonsole", 14, 50 + 8, 8, 5);
+    u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
+    _gfx.print(10, "EX board. 2024", 86, ((H_LCD/2) + (windows_height/2) + 7), 10, 6);
 }
 
 /* Turns off the backlight and turns on an infinite loop
@@ -687,7 +687,7 @@ void Screensaver::screensaver(bool state, uint timeUntil)
 
       while (isTouched() == true)
       {
-        _gfx.render(sleepModeText);
+        _gfx.render(sleepModeText, 500);
       }
 
       digitalWrite(PIN_BACKLIGHT_LCD, true);
