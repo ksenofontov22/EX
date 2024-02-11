@@ -169,6 +169,7 @@ Graphics gfx;
 Cursor crs1;
 Shortcut iconSapper, iconGears;
 PowerSave pws;
+Terminal trm;
 
 bool stateGame = false;
 
@@ -270,20 +271,20 @@ void gamePong()
     drawField(); drawRackets(); drawBall(); drawScore();
 }
 
-void interfaceBoard()
+/*void interfaceBoard()
 {
     if (stateGame == false) gfx.render(desctop);
     if (stateGame == true) gfx.render(gamePong);
-}
+}*/
 
-void desctop()
+/*void desctop()
 {
     joy.updatePositionXY(25); Serial.print((String)analogRead(34) + " | "); Serial.println((String)analogRead(35));
 
     gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
-    iconSapper.shortcut(sapper_bits, 5, 30, gamePong, joy.posX0, joy.posY0);
+    iconSapper.shortcut("Pong", sapper_bits, 5, 30, gamePong, joy.posX0, joy.posY0);
     crs1.cursor(true, joy.posX0, joy.posY0); //Serial.println(joy.posX0); Serial.println(joy.posY0);
-}
+}*/
 
 void setup()
 {
@@ -292,6 +293,7 @@ void setup()
 
 void loop()
 {
-    interfaceBoard();   //pws.sleepDouble(true, 10000);
-                        pws.sleepDeep(true, 20000);
+    //interfaceBoard();   //pws.sleepDouble(true, 10000);
+    trm.terminal();
+    pws.sleepDeep(true, 20000);
 }

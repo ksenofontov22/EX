@@ -142,6 +142,9 @@ public:
        Define an icon-image with a resolution of 32x32 pixels, x-y-coordinates for output,
        xCursor-yCursor-coordinates of interaction with the cursor. */
     bool shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
+    /* A shortcut on the desktop to launch the void-function.
+       Define an icon-image with a resolution of 32x32 pixels + name */
+    bool shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
 };
 
 class Cursor

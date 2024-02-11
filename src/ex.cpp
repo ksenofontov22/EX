@@ -15,7 +15,8 @@
 //version library
 const int8_t VERSION_LIB[] = {1, 0};
 
-Graphics _gfx; Timer _delayCursor;
+Graphics _gfx; Timer _delayCursor; Application _systemtray; Joystick _joy; Shortcut _myConsole;
+Cursor _crs;
 
 enum StateOs
 {
@@ -35,6 +36,11 @@ enum StateOs
 
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{};
+
+//buffer
+String BUFFER_STRING{};
+int BUFFER_INT{};
+double BUFFER_DOUBLE{};
 
 //for timer
 unsigned long previousMillis{};
@@ -80,6 +86,8 @@ void Graphics::controlBacklight(bool state)
 void Graphics::initializationSystem()
 {
     /* GPIO release from sleep */
+    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
+    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1);
     esp_sleep_enable_ext0_wakeup(GPIO_NUM_34, 1);
     esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 1);
     
@@ -330,6 +338,29 @@ bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(v
   return false;
 }
 
+bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
+{
+  u8g2.setDrawColor(1);
+  u8g2.setBitmapMode(0);
+  u8g2.drawXBMP(x, y, 32, 32, bitMap);
+  u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
+
+  if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
+  {
+    u8g2.drawFrame(x, y, 32, 32);
+    BUFFER_STRING = name;
+    
+    if (Joystick::pressKeyA() == true)
+    {
+      f();
+      return true;
+    }
+  }
+  else BUFFER_STRING = "";
+
+  return false;
+}
+
 /* Joystic */
 /* system button control */
 bool Joystick::pressKeyA()
@@ -359,19 +390,27 @@ int Joystick::calculatePositionY0() // 0y
 
     if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 500)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
     {
-        return COOR_Y0 = COOR_Y0 - 1;
+        COOR_Y0 -= 1;
+        if (COOR_Y0 <= 0) COOR_Y0 = 160;
+        return COOR_Y0;
     }
     else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
     {
-        return COOR_Y0 = COOR_Y0 - 2;
+        COOR_Y0 -= 2;
+        if (COOR_Y0 <= 0) COOR_Y0 = 160;
+        return COOR_Y0;
     }
     else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 500)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
     {
-        return COOR_Y0 = COOR_Y0 + 1;
+        COOR_Y0 += 1;
+        if (COOR_Y0 >= 160) COOR_Y0 = 0;
+        return COOR_Y0;
     }
     else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
     {
-        return COOR_Y0 = COOR_Y0 + 2;
+        COOR_Y0 += 2;
+        if (COOR_Y0 >= 160) COOR_Y0 = 0;
+        return COOR_Y0;
     }
     else
         return COOR_Y0;
@@ -381,21 +420,29 @@ int Joystick::calculatePositionY1() // 1y
 {
     RAW_DATA_Y1 = analogRead(PIN_STICK_1Y);
 
-    if ((RAW_DATA_Y1 < (DEF_RES_Y1 - 200)) && (RAW_DATA_Y1 > (DEF_RES_Y1 - 1100)))
+    if ((RAW_DATA_Y1 < (DEF_RES_Y1 - 500)) && (RAW_DATA_Y1 > (DEF_RES_Y1 - 1100)))
     {
-        return COOR_Y1 = COOR_Y1 - 1;
+        COOR_Y1 -= 1;
+        if (COOR_Y1 <= 0) COOR_Y1 = 160;
+        return COOR_Y1;
     }
     else if (RAW_DATA_Y1 < (DEF_RES_Y1 - 1100))
     {
-        return COOR_Y1 = COOR_Y1 - 2;
+        COOR_Y1 -= 2;
+        if (COOR_Y1 <= 0) COOR_Y1 = 160;
+        return COOR_Y1;
     }
-    else if ((RAW_DATA_Y1 > (DEF_RES_Y1 + 200)) && (RAW_DATA_Y1 < (DEF_RES_Y1 + 1100)))
+    else if ((RAW_DATA_Y1 > (DEF_RES_Y1 + 500)) && (RAW_DATA_Y1 < (DEF_RES_Y1 + 1100)))
     {
-        return COOR_Y1 = COOR_Y1 + 1;
+        COOR_Y1 += 1;
+        if (COOR_Y1 >= 160) COOR_Y1 = 0;
+        return COOR_Y1;
     }
     else if (RAW_DATA_Y1 > (DEF_RES_Y1 + 1100))
     {
-        return COOR_Y1 = COOR_Y1 + 2;
+        COOR_Y1 += 2;
+        if (COOR_Y1 >= 160) COOR_Y1 = 0;
+        return COOR_Y1;
     }
     else
         return COOR_Y1;
@@ -407,19 +454,29 @@ int Joystick::calculatePositionX0() // 0x
 
     if ((RAW_DATA_X0 < (DEF_RES_X0 - 500)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
     {
-        return COOR_X0 = COOR_X0 + 1;
+        COOR_X0 += 1;
+        if (COOR_X0 >= 256) COOR_X0 = 0;
+        return COOR_X0; 
+
     }
     else if (RAW_DATA_X0 < (DEF_RES_X0 - 1100))
     {
-        return COOR_X0 = COOR_X0 + 2;
+        COOR_X0 += 2;
+        if (COOR_X0 >= 256) COOR_X0 = 0;
+        return COOR_X0;
+
     }
     else if ((RAW_DATA_X0 > (DEF_RES_X0 + 500)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
     {
-        return COOR_X0 = COOR_X0 - 1;
+        COOR_X0 -= 1;
+        if (COOR_X0 <= 0) COOR_X0 = 256;
+        return COOR_X0; 
     }
     else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
     {
-        return COOR_X0 = COOR_X0 - 2;
+        COOR_X0 -= 2;
+        if (COOR_X0 <= 0) COOR_X0 = 256;
+        return COOR_X0;
     }
     else
         return COOR_X0;
@@ -429,21 +486,29 @@ int Joystick::calculatePositionX1() // 1x
 {
     RAW_DATA_X1 = analogRead(PIN_STICK_1X);
 
-    if ((RAW_DATA_X1 < (DEF_RES_X1 - 200)) && (RAW_DATA_X1 > (DEF_RES_X1 - 1100)))
+    if ((RAW_DATA_X1 < (DEF_RES_X1 - 500)) && (RAW_DATA_X1 > (DEF_RES_X1 - 1100)))
     {
-        return COOR_X1 = COOR_X1 + 1;
+        COOR_X1 += 1;
+        if (COOR_X1 >= 256) COOR_X1 = 0;
+        return COOR_X1;
     }
     else if (RAW_DATA_X1 < (DEF_RES_X1 - 1100))
     {
-        return COOR_X1 = COOR_X1 + 2;
+        COOR_X1 += 2;
+        if (COOR_X1 >= 256) COOR_X1 = 0;
+        return COOR_X1;
     }
-    else if ((RAW_DATA_X1 > (DEF_RES_X1 + 200)) && (RAW_DATA_X1 < (DEF_RES_X1 + 1100)))
+    else if ((RAW_DATA_X1 > (DEF_RES_X1 + 500)) && (RAW_DATA_X1 < (DEF_RES_X1 + 1100)))
     {
-        return COOR_X1 = COOR_X1 - 1;
+        COOR_X1 -= 1;
+        if (COOR_X1 <= 0) COOR_X1 = 256;
+        return COOR_X1;
     }
     else if (RAW_DATA_X1 > (DEF_RES_X1 + 1100))
     {
-        return COOR_X1 = COOR_X1 - 2;
+        COOR_X1 -= 2;
+        if (COOR_X1 <= 0) COOR_X1 = 256;
+        return COOR_X1;
     }
     else
         return COOR_X1;
@@ -583,7 +648,7 @@ void Timer::timer(void (*f)(void), int interval)
 
 /* terminal */
 /* prototype */
-void clearCommandTerminal();
+void clearCommandTerminal(); void desctop(); void systemTray();
 
 /* command type */
 struct Command
@@ -597,6 +662,8 @@ struct Command
 Command commands[]
 {
     {"clrcom", clearCommandTerminal, false},
+    {"dectop", desctop, true},
+    {"systry", systemTray, true},
 };
 
 /* delete all commands */
@@ -623,7 +690,8 @@ void calcTerminal()
 /* pushing data onto the stack */
 void Terminal::terminal()
 {
-  calcTerminal();
+  _gfx.render(calcTerminal);
+  //calcTerminal();
 
   if (Serial.available() != 0)
   {
@@ -915,5 +983,25 @@ void Application::window(String name, String command,
             int sizeW, int sizeH, 
             void (*fCalculation)(void), void (*fRender)(void))
             {
-
+                fCalculation();
+                fRender();
             }
+
+/* System tray */
+void systemTray()
+{
+    u8g2.drawHLine(0, 150, 256);
+    _gfx.print(BUFFER_STRING, 5, 159);
+}
+
+void ff(){}
+
+/* TEST Desctop */
+void desctop()
+{
+    _joy.updatePositionXY(25); //Serial.print((String)analogRead(34) + " | "); Serial.println((String)analogRead(35));
+
+    _gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
+    _myConsole.shortcut("My Console", icon_mytablet_bits, 5, 30, ff, _joy.posX0, _joy.posY0);
+    _crs.cursor(true, _joy.posX0, _joy.posY0); //Serial.println(joy.posX0); Serial.println(joy.posY0);
+}
