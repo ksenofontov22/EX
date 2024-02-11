@@ -168,7 +168,7 @@ Joystick joy;
 Graphics gfx;
 Cursor crs1;
 Shortcut iconSapper, iconGears;
-Screensaver scr;
+PowerSave pws;
 
 bool stateGame = false;
 
@@ -278,7 +278,7 @@ void interfaceBoard()
 
 void desctop()
 {
-    joy.updatePositionXY(25); //Serial.print((String)analogRead(34) + " | "); Serial.println((String)analogRead(35));
+    joy.updatePositionXY(25); Serial.print((String)analogRead(34) + " | "); Serial.println((String)analogRead(35));
 
     gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
     iconSapper.shortcut(sapper_bits, 5, 30, gamePong, joy.posX0, joy.posY0);
@@ -292,5 +292,6 @@ void setup()
 
 void loop()
 {
-    interfaceBoard();   scr.screensaver(true, 10000);
+    interfaceBoard();   //pws.sleepDouble(true, 10000);
+                        pws.sleepDeep(true, 20000);
 }

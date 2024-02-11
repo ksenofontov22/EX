@@ -34,9 +34,7 @@ enum StateOs
 };
 
 //for screensaver
-unsigned long screenTiming{};
-unsigned long sleepModeTexCirculation{};
-int sleepTextX{5}, sleepTextY{10};
+unsigned long screenTiming{}, screenTiming2{};
 
 //for timer
 unsigned long previousMillis{};
@@ -81,6 +79,10 @@ void Graphics::controlBacklight(bool state)
 /* graphics output objects */
 void Graphics::initializationSystem()
 {
+    /* GPIO release from sleep */
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_34, 1);
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 1);
+    
     //setting the operating system state
     //setting display, contrast
     u8g2.begin(); Serial.begin(9600);
@@ -355,7 +357,7 @@ int Joystick::calculatePositionY0() // 0y
 {
     RAW_DATA_Y0 = analogRead(PIN_STICK_0Y);
 
-    if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 200)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
+    if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 500)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
     {
         return COOR_Y0 = COOR_Y0 - 1;
     }
@@ -363,7 +365,7 @@ int Joystick::calculatePositionY0() // 0y
     {
         return COOR_Y0 = COOR_Y0 - 2;
     }
-    else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 200)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
+    else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 500)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
     {
         return COOR_Y0 = COOR_Y0 + 1;
     }
@@ -403,7 +405,7 @@ int Joystick::calculatePositionX0() // 0x
 {
     RAW_DATA_X0 = analogRead(PIN_STICK_0X);
 
-    if ((RAW_DATA_X0 < (DEF_RES_X0 - 200)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
+    if ((RAW_DATA_X0 < (DEF_RES_X0 - 500)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
     {
         return COOR_X0 = COOR_X0 + 1;
     }
@@ -411,7 +413,7 @@ int Joystick::calculatePositionX0() // 0x
     {
         return COOR_X0 = COOR_X0 + 2;
     }
-    else if ((RAW_DATA_X0 > (DEF_RES_X0 + 200)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
+    else if ((RAW_DATA_X0 > (DEF_RES_X0 + 500)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
     {
         return COOR_X0 = COOR_X0 - 1;
     }
@@ -640,7 +642,7 @@ void Terminal::terminal()
 
 /* Screensaver */
 /* The function checks whether the joystick or button is pressed at a certain moment */
-bool Screensaver::isTouched()
+bool PowerSave::isTouched()
 {
   if ((calculateIndexY0() == 0) && (calculateIndexX0() == 0) /*&& 
       (pressKeyA() == 0) && (pressKeyB() == 0)*/)
@@ -654,21 +656,14 @@ bool Screensaver::isTouched()
 /* Shows a notification about the start of sleep mode */
 void sleepModeText()
 {
-  if (millis() - sleepModeTexCirculation >= 5000)
-  {
-    sleepModeTexCirculation = millis();
-
-    //sleepTextX = random(0, 80);   // Sleep (5 character) --> 128 px - (5 char * 6 px)
-    //sleepTextY = random(10, 58);  // 64 px - 10 px
-  }
-  
     u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
     _gfx.print(10, "EX board. 2024", 86, ((H_LCD/2) + (windows_height/2) + 7), 10, 6);
 }
 
 /* Turns off the backlight and turns on an infinite loop
    with the text to pause until the joysticks are pressed or moved */
-void Screensaver::screensaver(bool state, uint timeUntil)
+/* Light sleep */
+void PowerSave::sleepLight(bool state, uint timeUntil)
 {
   if ((state == true))
   {
@@ -683,16 +678,74 @@ void Screensaver::screensaver(bool state, uint timeUntil)
 
       digitalWrite(PIN_BACKLIGHT_LCD, false);
 
-      sleepModeTexCirculation = millis();
+      //sleepModeTexCirculation = millis();
 
       while (isTouched() == true)
       {
+        /* Sleep */
         _gfx.render(sleepModeText, 500);
+        //esp_deep_sleep_start();
+          esp_light_sleep_start();
       }
 
       digitalWrite(PIN_BACKLIGHT_LCD, true);
     }
   }
+}
+/* Deep sleep */
+void PowerSave::sleepDeep(bool state, uint timeUntil)
+{
+  if ((state == true))
+  {
+    if (!isTouched())
+    {
+      screenTiming = millis();
+    }
+
+    if (millis() - screenTiming > timeUntil)
+    {
+      screenTiming = millis();
+
+      digitalWrite(PIN_BACKLIGHT_LCD, false);
+
+      //sleepModeTexCirculation = millis();
+
+      while (isTouched() == true)
+      {
+        /* Sleep */
+        esp_deep_sleep_start();
+      }
+
+      digitalWrite(PIN_BACKLIGHT_LCD, true);
+    }
+  }
+}
+/* Double sleep */
+void PowerSave::sleepDouble(bool state, uint timeUntil)
+{
+    if ((state == true))
+    {
+        if (!isTouched())
+        {
+            screenTiming = millis();
+        }
+
+        if (millis() - screenTiming > timeUntil)
+        {
+            screenTiming = millis();
+
+            digitalWrite(PIN_BACKLIGHT_LCD, false);
+
+            while (isTouched() == true)
+            {
+                /* Sleep */
+                _gfx.render(sleepModeText, 500);
+                esp_light_sleep_start();
+            }
+
+            digitalWrite(PIN_BACKLIGHT_LCD, true);
+        }
+    }
 }
 
 /* Song engine */
@@ -855,3 +908,12 @@ void Melody::song(listMelody num)
         break;
     }
 }
+
+/* Application */
+void Application::window(String name, String command, 
+            bool state, uint8_t priority, STATEWINDOW num, 
+            int sizeW, int sizeH, 
+            void (*fCalculation)(void), void (*fRender)(void))
+            {
+
+            }

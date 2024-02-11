@@ -153,14 +153,18 @@ public:
     bool cursor(bool stateCursor, int xCursor, int yCursor);
 };
 
-class Screensaver : Joystick
+class PowerSave : Joystick
 {
 private:
     /* If joystick pressed ot moved - 0, else - 1 */
     bool isTouched();    
 public:
-    /* Turn off backlight and start infinite loop to pause if (is touched()) */
-    void screensaver(bool state, uint timeUntil);
+    /* Powersave - light mode */
+    void sleepLight(bool state, uint timeUntil);
+    /* Powersave - deep mode */
+    void sleepDeep(bool state, uint timeUntil);
+    /* Powersave - double mode */
+    void sleepDouble(bool state, uint timeUntil);
 };
 
 class Melody
@@ -217,4 +221,25 @@ public:
 
 };
 
+class Application
+{
+    protected:
+    private:
+    public:
+    /* List state window */
+    enum STATEWINDOW
+    {
+        Normal,
+        Collapse,
+        Expand,
+        Close
+    };
+    
+    STATEWINDOW stateWindow;
+    /* Applic */
+    void window(String name, String command, 
+                bool state, uint8_t priority, STATEWINDOW num, 
+                int sizeW, int sizeH, 
+                void (*fCalculation)(void), void (*fRender)(void));
+};
 #endif
