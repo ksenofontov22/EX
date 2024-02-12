@@ -947,8 +947,15 @@ void systemCursor()
     _joy.updatePositionXY(25);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
+/* System viewList */
+void systemViewList()
+{
+
+}
+
 /* NULL function */
 void ff(){}
+
 /* Desctop */
 void desctop()
 {
