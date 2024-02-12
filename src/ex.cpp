@@ -15,7 +15,7 @@
 //version library
 const int8_t VERSION_LIB[] = {1, 0};
 
-Graphics _gfx; Timer _delayCursor; Application _systemtray; Joystick _joy; Shortcut _myConsole;
+Graphics _gfx; Timer _delayCursor; Application _desc; Joystick _joy; Shortcut _myConsole;
 Cursor _crs; PowerSave _pwsDeep;
 
 enum StateOs
@@ -540,6 +540,11 @@ void Joystick::updatePositionXY(uint delay)
         posX1 = calculatePositionX1();
         posY0 = calculatePositionY0(); //
         posY1 = calculatePositionY1();
+
+        indexX0 = calculateIndexX0();
+        indexX1 = calculateIndexX1();
+        indexY0 = calculateIndexY0();
+        indexY1 = calculateIndexY1();
     }
 }
 
@@ -651,72 +656,7 @@ void Timer::timer(void (*f)(void), int interval)
     }
 }
 
-/* terminal */
-/* prototype */
-void clearCommandTerminal(); void desctop(); void systemTray(); void powerSaveDeepSleep();
-
-/* command type */
-struct Command
-{
-    char const *text;
-    void (*f)(void);
-    bool active;
-};
-
-/* enumeration of objects - commands */
-Command commands[]
-{
-    {"clearcom", clearCommandTerminal, false},
-    {"dectop", desctop, true},
-    {"deepsleep", powerSaveDeepSleep, true},
-    {"systray", systemTray, true},
-};
-
-/* delete all commands */
-void clearCommandTerminal()
-{
-  for (Command &command : commands)
-  {
-    command.active = false;
-  }
-}
-
-/* command stack */
-void calcTerminal()
-{
-  for (Command &command : commands)
-  {
-    if (command.active)
-    {
-      command.f();
-    }
-  }
-}
-
-/* pushing data onto the stack */
-void Terminal::terminal()
-{
-  TIMER = millis();
-  
-  _gfx.render(calcTerminal);
-  //calcTerminal();
-
-  if (Serial.available() != 0)
-  {
-    char text[10]{};
-    Serial.readBytesUntil('\n', text, sizeof(text));
-
-    for (Command &command : commands)
-    {
-      if (not strncmp(command.text, text, 10))
-      {
-        command.active = true;
-      }
-    }
-  }
-}
-
-/* Screensaver */
+/* Powersave mode */
 /* The function checks whether the joystick or button is pressed at a certain moment */
 bool isTouched()
 {
@@ -724,17 +664,15 @@ bool isTouched()
 
   return true;
 }
-
 /* Shows a notification about the start of sleep mode */
-void sleepModeText()
+void sleepModeScreen()
 {
     u8g2.clearBuffer();
     u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
     _gfx.print(10, "EX board. 2024", 86, ((H_LCD/2) + (windows_height/2) + 7), 10, 6);
     u8g2.sendBuffer();
 }
-
-
+/* */
 void powerSaveDeepSleep()
 {
     if (isTouched() == true)
@@ -750,7 +688,7 @@ void powerSaveDeepSleep()
 
         while (isTouched() == false)
         {
-            sleepModeText();
+            sleepModeScreen();
             esp_light_sleep_start();
         }
     }
@@ -765,7 +703,6 @@ void powerSaveDeepSleep()
         }
     }
 }
-
 /* Turns off the backlight and turns on an infinite loop
    with the text to pause until the joysticks are pressed or moved */
 /* Light sleep */
@@ -787,7 +724,7 @@ void PowerSave::sleepLight(bool state, uint timeUntil)
       while (isTouched() == false)
       {
         /* Sleep */
-        _gfx.render(sleepModeText, 500);
+        _gfx.render(sleepModeScreen, 500);
         //esp_deep_sleep_start();
         esp_light_sleep_start();
       }
@@ -835,7 +772,7 @@ void songEngine(uint arr[][2], uint noteCount)
     noTone(PIN_BUZZER);
   }
 }
-
+/*  */
 void Melody::songCore()
 {
     switch (lM)
@@ -908,7 +845,7 @@ void Melody::songCore()
         break;
     }
 }
-
+/*  */
 void Melody::song(listMelody num)
 {
     switch (num)
@@ -996,22 +933,88 @@ void Application::window(String name, String command,
                 fRender();
             }
 
+void Application::window(String name){}
+
 /* System tray */
 void systemTray()
 {
     u8g2.drawHLine(0, 150, 256);
     _gfx.print(BUFFER_STRING, 5, 159);
-    _gfx.print((String)screenTiming, 200, 159);
 }
-
+/* System cursor */
+void systemCursor()
+{
+    _joy.updatePositionXY(25);
+    _crs.cursor(true, _joy.posX0, _joy.posY0);
+}
+/* NULL function */
 void ff(){}
-
-/* TEST Desctop */
+/* Desctop */
 void desctop()
 {
-    _joy.updatePositionXY(25); //Serial.print((String)analogRead(34) + " | "); Serial.println((String)analogRead(35));
-
     _gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
     _myConsole.shortcut("My Console", icon_mytablet_bits, 5, 30, ff, _joy.posX0, _joy.posY0);
-    _crs.cursor(true, _joy.posX0, _joy.posY0); //Serial.println(joy.posX0); Serial.println(joy.posY0);
+}
+
+/* TERMINAL */
+void clearCommandTerminal();
+/* command type */
+struct Command
+{
+    char const *text;
+    void (*f)(void);
+    bool active;
+};
+
+/* enumeration of objects - commands */
+Command commands[]
+{
+    {"clearcom",  clearCommandTerminal, false},
+    {"dectop",    desctop,              true},
+    {"deepsleep", powerSaveDeepSleep,   true},
+    {"systray",   systemTray,           true},
+    {"syscursor", systemCursor,         true},
+};
+
+/* delete all commands */
+void clearCommandTerminal()
+{
+  for (Command &command : commands)
+  {
+    command.active = false;
+  }
+}
+
+/* command stack */
+void calcTerminal()
+{
+  for (Command &command : commands)
+  {
+    if (command.active)
+    {
+      command.f();
+    }
+  }
+}
+
+/* pushing data onto the stack */
+void Terminal::terminal()
+{
+  TIMER = millis();
+  
+  _gfx.render(calcTerminal);
+
+  if (Serial.available() != 0)
+  {
+    char text[20]{};
+    Serial.readBytesUntil('\n', text, sizeof(text));
+
+    for (Command &command : commands)
+    {
+      if (not strncmp(command.text, text, 20))
+      {
+        command.active = true;
+      }
+    }
+  }
 }

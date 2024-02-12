@@ -12,7 +12,7 @@
 #include <U8g2lib.h>
 
 #ifndef EX_H
-#define EX_H
+#define EX_H 
 
 /* We let the compiler know that the u8g2 object is defined in another file */
 extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
@@ -112,6 +112,7 @@ public:
 class Terminal
 {
 private:
+    void (*callbacks[10])() = {};
 public:
     void terminal();
 };
@@ -245,5 +246,6 @@ class Application
                 bool state, uint8_t priority, STATEWINDOW num, 
                 int sizeW, int sizeH, 
                 void (*fCalculation)(void), void (*fRender)(void));
+    void window(String name);
 };
 #endif
