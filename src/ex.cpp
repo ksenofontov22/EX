@@ -16,7 +16,7 @@
 const int8_t VERSION_LIB[] = {1, 0};
 
 Graphics _gfx; Timer _delayCursor; Application _systemtray; Joystick _joy; Shortcut _myConsole;
-Cursor _crs;
+Cursor _crs; PowerSave _pwsDeep;
 
 enum StateOs
 {
@@ -35,7 +35,7 @@ enum StateOs
 };
 
 //for screensaver
-unsigned long screenTiming{}, screenTiming2{};
+unsigned long screenTiming{}, screenTiming2{}, TIMER{};
 
 //buffer
 String BUFFER_STRING{};
@@ -521,6 +521,11 @@ void Joystick::updatePositionXY()
     posX1 = calculatePositionX1();
     posY0 = calculatePositionY0(); //
     posY1 = calculatePositionY1();
+
+    indexX0 = calculateIndexX0();
+    indexX1 = calculateIndexX1();
+    indexY0 = calculateIndexY0();
+    indexY1 = calculateIndexY1();
 }
 
 /* Updating Stick coordinates */
@@ -543,7 +548,7 @@ int8_t Joystick::calculateIndexY0() // obj 0y
 {
     RAW_DATA_Y0 = analogRead(PIN_STICK_0Y);
 
-    if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 200)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
+    if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 500)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
     {
         return OBJ_Y0 = OBJ_Y0 - 1;
     }
@@ -551,7 +556,7 @@ int8_t Joystick::calculateIndexY0() // obj 0y
     {
         return OBJ_Y0 = OBJ_Y0 - 1; // 2
     }
-    else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 200)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
+    else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 500)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
     {
         return OBJ_Y0 = OBJ_Y0 + 1;
     }
@@ -567,7 +572,7 @@ int8_t Joystick::calculateIndexY1() // obj 1y
 {
     RAW_DATA_Y1 = analogRead(PIN_STICK_1Y);
 
-    if ((RAW_DATA_Y1 < (DEF_RES_Y1 - 200)) && (RAW_DATA_Y1 > (DEF_RES_Y1 - 1100)))
+    if ((RAW_DATA_Y1 < (DEF_RES_Y1 - 500)) && (RAW_DATA_Y1 > (DEF_RES_Y1 - 1100)))
     {
         return OBJ_Y1 = OBJ_Y1 - 1;
     }
@@ -575,7 +580,7 @@ int8_t Joystick::calculateIndexY1() // obj 1y
     {
         return OBJ_Y1 = OBJ_Y1 - 1; // 2
     }
-    else if ((RAW_DATA_Y1 > (DEF_RES_Y1 + 200)) && (RAW_DATA_Y1 < (DEF_RES_Y1 + 1100)))
+    else if ((RAW_DATA_Y1 > (DEF_RES_Y1 + 500)) && (RAW_DATA_Y1 < (DEF_RES_Y1 + 1100)))
     {
         return OBJ_Y1 = OBJ_Y1 + 1;
     }
@@ -591,7 +596,7 @@ int8_t Joystick::calculateIndexX0() // obj 0x
 {
     RAW_DATA_X0 = analogRead(PIN_STICK_0X);
 
-    if ((RAW_DATA_X0 < (DEF_RES_X0 - 200)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
+    if ((RAW_DATA_X0 < (DEF_RES_X0 - 500)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
     {
         return OBJ_X0 = OBJ_X0 - 1;
     }
@@ -599,7 +604,7 @@ int8_t Joystick::calculateIndexX0() // obj 0x
     {
         return OBJ_X0 = OBJ_X0 - 1; // 2
     }
-    else if ((RAW_DATA_X0 > (DEF_RES_X0 + 200)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
+    else if ((RAW_DATA_X0 > (DEF_RES_X0 + 500)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
     {
         return OBJ_X0 = OBJ_X0 + 1;
     }
@@ -615,7 +620,7 @@ int8_t Joystick::calculateIndexX1() // obj 1x
 {
     RAW_DATA_X1 = analogRead(PIN_STICK_1X);
 
-    if ((RAW_DATA_X1 < (DEF_RES_X1 - 200)) && (RAW_DATA_X1 > (DEF_RES_X1 - 1100)))
+    if ((RAW_DATA_X1 < (DEF_RES_X1 - 500)) && (RAW_DATA_X1 > (DEF_RES_X1 - 1100)))
     {
         return OBJ_X1 = OBJ_X1 - 1;
     }
@@ -623,7 +628,7 @@ int8_t Joystick::calculateIndexX1() // obj 1x
     {
         return OBJ_X1 = OBJ_X1 - 1; // 2
     }
-    else if ((RAW_DATA_X1 > (DEF_RES_X1 + 200)) && (RAW_DATA_X1 < (DEF_RES_X1 + 1100)))
+    else if ((RAW_DATA_X1 > (DEF_RES_X1 + 500)) && (RAW_DATA_X1 < (DEF_RES_X1 + 1100)))
     {
         return OBJ_X1 = OBJ_X1 + 1;
     }
@@ -648,22 +653,23 @@ void Timer::timer(void (*f)(void), int interval)
 
 /* terminal */
 /* prototype */
-void clearCommandTerminal(); void desctop(); void systemTray();
+void clearCommandTerminal(); void desctop(); void systemTray(); void powerSaveDeepSleep();
 
 /* command type */
 struct Command
 {
     char const *text;
-    void (*f)();
+    void (*f)(void);
     bool active;
 };
 
 /* enumeration of objects - commands */
 Command commands[]
 {
-    {"clrcom", clearCommandTerminal, false},
+    {"clearcom", clearCommandTerminal, false},
     {"dectop", desctop, true},
-    {"systry", systemTray, true},
+    {"deepsleep", powerSaveDeepSleep, true},
+    {"systray", systemTray, true},
 };
 
 /* delete all commands */
@@ -690,6 +696,8 @@ void calcTerminal()
 /* pushing data onto the stack */
 void Terminal::terminal()
 {
+  TIMER = millis();
+  
   _gfx.render(calcTerminal);
   //calcTerminal();
 
@@ -710,22 +718,52 @@ void Terminal::terminal()
 
 /* Screensaver */
 /* The function checks whether the joystick or button is pressed at a certain moment */
-bool PowerSave::isTouched()
+bool isTouched()
 {
-  if ((calculateIndexY0() == 0) && (calculateIndexX0() == 0) /*&& 
-      (pressKeyA() == 0) && (pressKeyB() == 0)*/)
-  {
-    return true;
-  }
+  if ((_joy.calculateIndexY0() == 0) && (_joy.calculateIndexX0() == 0)) return false;
 
-  return false;
+  return true;
 }
 
 /* Shows a notification about the start of sleep mode */
 void sleepModeText()
 {
+    u8g2.clearBuffer();
     u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
     _gfx.print(10, "EX board. 2024", 86, ((H_LCD/2) + (windows_height/2) + 7), 10, 6);
+    u8g2.sendBuffer();
+}
+
+
+void powerSaveDeepSleep()
+{
+    if (isTouched() == true)
+    {
+        screenTiming = TIMER;
+    }
+    
+    if (_joy.posY0 >= 150) BUFFER_STRING = "Light powersave mode";
+    
+    if ((TIMER - screenTiming > 30000) && (_joy.posY0 >= 150))
+    {
+        screenTiming = TIMER;
+
+        while (isTouched() == false)
+        {
+            sleepModeText();
+            esp_light_sleep_start();
+        }
+    }
+    
+    if ((TIMER - screenTiming > 30000) && (_joy.posY0 < 150))
+    {
+        screenTiming = TIMER;
+
+        while (isTouched() == false)
+        {
+            esp_deep_sleep_start();
+        }
+    }
 }
 
 /* Turns off the backlight and turns on an infinite loop
@@ -735,7 +773,7 @@ void PowerSave::sleepLight(bool state, uint timeUntil)
 {
   if ((state == true))
   {
-    if (!isTouched())
+    if (isTouched() == true)
     {
       screenTiming = millis();
     }
@@ -746,14 +784,12 @@ void PowerSave::sleepLight(bool state, uint timeUntil)
 
       digitalWrite(PIN_BACKLIGHT_LCD, false);
 
-      //sleepModeTexCirculation = millis();
-
-      while (isTouched() == true)
+      while (isTouched() == false)
       {
         /* Sleep */
         _gfx.render(sleepModeText, 500);
         //esp_deep_sleep_start();
-          esp_light_sleep_start();
+        esp_light_sleep_start();
       }
 
       digitalWrite(PIN_BACKLIGHT_LCD, true);
@@ -765,20 +801,20 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
 {
   if ((state == true))
   {
-    if (!isTouched())
+    if (isTouched() == true)
     {
-      screenTiming = millis();
+      screenTiming = TIMER;
     }
+    else screenTiming = screenTiming;
 
-    if (millis() - screenTiming > timeUntil)
+
+    if (TIMER - screenTiming > timeUntil)
     {
-      screenTiming = millis();
+      screenTiming = TIMER;
 
       digitalWrite(PIN_BACKLIGHT_LCD, false);
 
-      //sleepModeTexCirculation = millis();
-
-      while (isTouched() == true)
+      while (isTouched() == false)
       {
         /* Sleep */
         esp_deep_sleep_start();
@@ -787,33 +823,6 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
       digitalWrite(PIN_BACKLIGHT_LCD, true);
     }
   }
-}
-/* Double sleep */
-void PowerSave::sleepDouble(bool state, uint timeUntil)
-{
-    if ((state == true))
-    {
-        if (!isTouched())
-        {
-            screenTiming = millis();
-        }
-
-        if (millis() - screenTiming > timeUntil)
-        {
-            screenTiming = millis();
-
-            digitalWrite(PIN_BACKLIGHT_LCD, false);
-
-            while (isTouched() == true)
-            {
-                /* Sleep */
-                _gfx.render(sleepModeText, 500);
-                esp_light_sleep_start();
-            }
-
-            digitalWrite(PIN_BACKLIGHT_LCD, true);
-        }
-    }
 }
 
 /* Song engine */
@@ -992,6 +1001,7 @@ void systemTray()
 {
     u8g2.drawHLine(0, 150, 256);
     _gfx.print(BUFFER_STRING, 5, 159);
+    _gfx.print((String)screenTiming, 200, 159);
 }
 
 void ff(){}

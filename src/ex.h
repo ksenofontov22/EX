@@ -46,6 +46,7 @@ public:
 
     /* Variables for storing coordinates from the axes of the Sticks. */
     int posX0{}, posY0{}, posX1{}, posY1{};
+    int indexX0{}, indexY0{}, indexX1{}, indexY1{};
     
     /* Generates 1 or 0 if the button is pressed or not. */
     bool pressKeyA();
@@ -160,14 +161,14 @@ class PowerSave : Joystick
 {
 private:
     /* If joystick pressed ot moved - 0, else - 1 */
-    bool isTouched();    
+   //bool isTouched();    
 public:
     /* Powersave - light mode */
     void sleepLight(bool state, uint timeUntil);
     /* Powersave - deep mode */
     void sleepDeep(bool state, uint timeUntil);
     /* Powersave - double mode */
-    void sleepDouble(bool state, uint timeUntil);
+    //void powerSaveDeepSleep();
 };
 
 class Melody

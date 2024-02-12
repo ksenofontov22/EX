@@ -273,11 +273,11 @@ void gamePong()
 
 /*void interfaceBoard()
 {
-    if (stateGame == false) gfx.render(desctop);
+    if (stateGame == false) gfx.render(desctopp);
     if (stateGame == true) gfx.render(gamePong);
-}*/
+}
 
-/*void desctop()
+void desctopp()
 {
     joy.updatePositionXY(25); Serial.print((String)analogRead(34) + " | "); Serial.println((String)analogRead(35));
 
@@ -295,5 +295,5 @@ void loop()
 {
     //interfaceBoard();   //pws.sleepDouble(true, 10000);
     trm.terminal();
-    pws.sleepDeep(true, 20000);
+   // pws.sleepDeep(true, 20000);
 }
