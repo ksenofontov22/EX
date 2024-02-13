@@ -675,9 +675,15 @@ bool isTouched()
 /* Shows a notification about the start of sleep mode */
 void sleepModeScreen()
 {
-    u8g2.clearBuffer();
-    u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
-    _gfx.print(10, "EX board. 2024", 86, ((H_LCD/2) + (windows_height/2) + 7), 10, 6);
+    //u8g2.clearBuffer();
+    //u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
+    String textSleep = "Light sleep"; uint8_t amount = textSleep.length();
+    
+    //u8g2.drawFrame(((W_LCD/2)-(amount*6)/2)- 4, (H_LCD/2)-7, (amount * 6) + 8, 18 /*10+4+4*/);
+    
+    //u8g2.setDrawColor(2);
+    _gfx.print(10, textSleep, (W_LCD/2)-(amount*6)/2, (H_LCD/2)+7, 10, 6);
+    //u8g2.setDrawColor(1);
     u8g2.sendBuffer();
 }
 /* */
@@ -992,8 +998,8 @@ struct App
 App commands[]
 {
     {"clearcomm", "Clear command",  clearCommandTerminal, false,   0, NULL, 0},
-    {"desctop",   "Desctop",        desctop,              true,    0, NULL, 1},
     {"deepsleep", "Deep sleep PWS-mode", powerSaveDeepSleep, true, 0, NULL, 0},
+    {"desctop",   "Desctop",        desctop,              true,    0, NULL, 1},
     {"systray",   "Tray",           systemTray,           true,    0, NULL, 0},
     {"syscursor", "Cursor",         systemCursor,         true,    0, NULL, 0},
 };
