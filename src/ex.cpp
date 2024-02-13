@@ -134,6 +134,14 @@ void Graphics::render(void (*f)())
       f();
       u8g2.sendBuffer();
 }
+/* data render two function (full frame) */
+void Graphics::render(void (*f1)(), void (*f2)())
+{
+      u8g2.clearBuffer();
+      f1();
+      f2();
+      u8g2.sendBuffer();
+}
 
 /* clearing the output buffer */
 void Graphics::clear()
@@ -1010,6 +1018,27 @@ void Terminal::terminal()
   TIMER = millis();
   
   _gfx.render(calcTerminal);
+
+  if (Serial.available() != 0)
+  {
+    char text[20]{};
+    Serial.readBytesUntil('\n', text, sizeof(text));
+
+    for (Command &command : commands)
+    {
+      if (not strncmp(command.text, text, 20))
+      {
+        command.active = true;
+      }
+    }
+  }
+}
+
+void Terminal::terminal(void(*f)())
+{
+  TIMER = millis();
+  
+  _gfx.render(calcTerminal, f);
 
   if (Serial.available() != 0)
   {

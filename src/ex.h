@@ -12,7 +12,7 @@
 #include <U8g2lib.h>
 
 #ifndef EX_H
-#define EX_H 
+#define EX_H
 
 /* We let the compiler know that the u8g2 object is defined in another file */
 extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
@@ -80,6 +80,7 @@ public:
     void render(void (*f)(), int timeDelay);
     /* We send the void-function to the display buffer for output. */
     void render(void (*f)());
+    void render(void (*f1)(), void (*f2)());
     /* Clearing the display buffer. */
     void clear();
     /* Data output in x, y coordinates. Size font 5, 6, 7, 8, 10, 12, 13.
@@ -107,14 +108,6 @@ private:
 public:
     /* Starting a void-function on a interval-timer. */
     void timer(void (*f)(void), int interval);
-};
-
-class Terminal
-{
-private:
-    void (*callbacks[10])() = {};
-public:
-    void terminal();
 };
 
 class Interface
@@ -247,5 +240,126 @@ class Application
                 int sizeW, int sizeH, 
                 void (*fCalculation)(void), void (*fRender)(void));
     void window(String name);
+};
+
+class Terminal
+{
+private:
+public:
+    /* System terminal */
+    void terminal();
+    void terminal(void(*f)());
+};
+
+template <uint16_t _AMOUNT>
+class UserTerminal
+{
+private:
+    uint32_t uptime()
+    {
+        return usMode ? micros() : millis();
+    }
+
+    void (*callbacks[_AMOUNT])() = {};
+    uint32_t tmrs[_AMOUNT], prds[_AMOUNT], loopTime = 0, loopTimeMax = 0;
+    bool states[_AMOUNT];
+
+    bool usMode = 0;
+
+public:
+    void setMicros(bool mode)
+    {
+        usMode = mode;
+    }
+
+    void tick()
+    {
+        for (int i = 0; i < _AMOUNT; i++)
+        {
+            if (callbacks[i] && states[i])
+            {
+                uint32_t left = uptime() - tmrs[i];
+                if (prds[i] == 0 || left >= prds[i])
+                {
+                    if (prds[i] > 0)
+                        tmrs[i] += prds[i] * (left / prds[i]);
+
+                    callbacks[i]();
+                }
+            }
+        }
+    }
+
+    void attach(int num, void (*handler)(), uint32_t prd = 0)
+    {
+        if (num >= _AMOUNT)
+            return;
+        callbacks[num] = *handler;
+        prds[num] = prd;
+        start(num);
+    }
+
+    void detach(int num)
+    {
+        if (num >= _AMOUNT)
+            return;
+        callbacks[num] = NULL;
+    }
+
+    void setPeriod(int num, uint32_t prd)
+    {
+        if (num >= _AMOUNT)
+            return;
+        prds[num] = prd;
+        tmrs[num] = uptime();
+    }
+
+    void start(int num)
+    {
+        if (num >= _AMOUNT)
+            return;
+        states[num] = 1;
+        tmrs[num] = uptime();
+    }
+
+    void restart(int num)
+    {
+        start(num);
+    }
+
+    void stop(int num)
+    {
+        if (num >= _AMOUNT)
+            return;
+        states[num] = 0;
+    }
+
+    void exec(int num)
+    {
+        if (num >= _AMOUNT)
+            return;
+        callbacks[num]();
+    }
+
+    uint32_t getLeft()
+    {
+        uint32_t nearPrd = UINT32_MAX;
+        uint32_t tm = 0;
+        uint32_t upt = uptime();
+        for (int i = 0; i < _AMOUNT; i++)
+        {
+            if (callbacks[i] && states[i])
+            {
+                tm = upt - tmrs[i];
+                if (tm >= prds[i])
+                    tm = 0;
+                else
+                    tm = prds[i] - tm;
+                if (nearPrd > tm)
+                    nearPrd = tm;
+            }
+        }
+        return nearPrd;
+    }
 };
 #endif
