@@ -943,6 +943,7 @@ void Application::window(String name, String command,
 
 void Application::window(String name){}
 
+/* TASK-FUNCTION */
 /* System tray */
 void systemTray()
 {
@@ -960,10 +961,10 @@ void systemViewList()
 {
 
 }
-
 /* NULL function */
 void ff(){}
 
+/* APP */
 /* Desctop */
 void desctop()
 {
@@ -972,29 +973,35 @@ void desctop()
 }
 
 /* TERMINAL */
+/* Prototype function */
 void clearCommandTerminal();
+
 /* command type */
-struct Command
+struct App
 {
-    char const *text;
-    void (*f)(void);
-    bool active;
+    char const *text;       //command
+    char const *name;       //name task-function
+    void (*f)(void);        //task-function
+    bool active;            //activ status task-function
+    int priority;           //execution priority
+    const uint8_t *bitMap;  //icon task-function
+    bool state;             //0-task-function any 1-Application
 };
 
 /* enumeration of objects - commands */
-Command commands[]
+App commands[]
 {
-    {"clearcom",  clearCommandTerminal, false},
-    {"dectop",    desctop,              true},
-    {"deepsleep", powerSaveDeepSleep,   true},
-    {"systray",   systemTray,           true},
-    {"syscursor", systemCursor,         true},
+    {"clearcomm", "Clear command",  clearCommandTerminal, false,   0, NULL, 0},
+    {"desctop",   "Desctop",        desctop,              true,    0, NULL, 1},
+    {"deepsleep", "Deep sleep PWS-mode", powerSaveDeepSleep, true, 0, NULL, 0},
+    {"systray",   "Tray",           systemTray,           true,    0, NULL, 0},
+    {"syscursor", "Cursor",         systemCursor,         true,    0, NULL, 0},
 };
 
 /* delete all commands */
 void clearCommandTerminal()
 {
-  for (Command &command : commands)
+  for (App &command : commands)
   {
     command.active = false;
   }
@@ -1003,7 +1010,7 @@ void clearCommandTerminal()
 /* command stack */
 void calcTerminal()
 {
-  for (Command &command : commands)
+  for (App &command : commands)
   {
     if (command.active)
     {
@@ -1024,7 +1031,7 @@ void Terminal::terminal()
     char text[20]{};
     Serial.readBytesUntil('\n', text, sizeof(text));
 
-    for (Command &command : commands)
+    for (App &command : commands)
     {
       if (not strncmp(command.text, text, 20))
       {
@@ -1045,11 +1052,12 @@ void Terminal::terminal(void(*f)())
     char text[20]{};
     Serial.readBytesUntil('\n', text, sizeof(text));
 
-    for (Command &command : commands)
+    for (App &command : commands)
     {
       if (not strncmp(command.text, text, 20))
       {
-        command.active = true;
+        if (command.active == true) command.active = false;
+        else command.active = true;
       }
     }
   }

@@ -19,6 +19,8 @@ extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
 
+extern void clearCommandTerminal();
+
 class Joystick
 {
 protected:
@@ -284,7 +286,7 @@ public:
                     if (prds[i] > 0)
                         tmrs[i] += prds[i] * (left / prds[i]);
 
-                    callbacks[i]();
+                    callbacks[i](); //u8g2.sendBuffer();
                 }
             }
         }
@@ -294,7 +296,7 @@ public:
     {
         if (num >= _AMOUNT)
             return;
-        callbacks[num] = *handler;
+        callbacks[num] = *handler; //u8g2.sendBuffer();
         prds[num] = prd;
         start(num);
     }
@@ -362,4 +364,5 @@ public:
         return nearPrd;
     }
 };
+
 #endif

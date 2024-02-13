@@ -8,21 +8,24 @@ PowerSave pws;
 Terminal trm;
 UserTerminal <5> userTrm;
 
-void printSerial()
+void user_gfx_text()
 {
-    gfx.print("EX", 239, 10);
-    Serial.println("Test"); userTrm.tick();
+    gfx.print("EX", 239, 10); //u8g2.sendBuffer();
+    //Serial.println("EX"); 
+}
+
+void user_terminal()
+{
+    userTrm.tick();
 }
 
 void setup()
-{
-    userTrm.attach(0, printSerial, 0);
-    userTrm.attach(1, NULL, 0);
-
+{  
+    userTrm.attach(1, user_gfx_text, 10);
     gfx.initializationSystem();
 }
 
 void loop()
-{
-    trm.terminal();
+{  
+    trm.terminal(user_terminal); 
 }
