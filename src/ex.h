@@ -56,6 +56,8 @@ public:
 
     /* Updating Stick coordinates. */
     void updatePositionXY();
+    /* Reset position Sticks */
+    void resetPositionXY();
     /* Updating Stick coordinates. And delay update position. */
     void updatePositionXY(uint delay);
 
@@ -119,6 +121,8 @@ public:
     /* Output of a message to the user. Define the text-text and duration-duration.
        Line break is supported - '\n'. */
     void message(String text, int duration);
+    void popUpMessage(String label, String message, uint tDelay);
+    void popUpMessage(String label, String text);
 };
 
 class Button : Joystick

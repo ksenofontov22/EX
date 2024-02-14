@@ -16,7 +16,7 @@
 const int8_t VERSION_LIB[] = {1, 0};
 
 Graphics _gfx; Timer _delayCursor; Application _desc; Joystick _joy; Shortcut _myConsole;
-Cursor _crs; PowerSave _pwsDeep;
+Cursor _crs; PowerSave _pwsDeep; Interface _interface;
 
 enum StateOs
 {
@@ -293,6 +293,77 @@ void Interface::message(String text, int duration)
     delay(duration);
 }
 
+void Interface::popUpMessage(String label, String text, uint tDelay)
+{
+    uint8_t sizeText = text.length(); 
+    uint8_t countLine{1}, countChar{}, maxChar{}, h_frame{}, border{5}; 
+
+    for (int i = 0; i < sizeText; i++)
+    {
+        if (text[i] != '\0')
+        {
+            countChar++;
+
+            if (text[i] == '\n')
+            {
+                maxChar = countChar;
+                countChar = 0;
+                countLine++;
+            }
+
+            if (countChar > maxChar) maxChar = countChar;
+        }
+    }
+    
+    h_frame = countLine * 10;
+
+    u8g2.clearBuffer();
+    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - border, (H_LCD/2) - 10 - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
+    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - (border + 3), (H_LCD/2) - 10 - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
+
+    _gfx.print(label, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - 10 - (border + 4));
+    _gfx.print(text, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2));
+    u8g2.sendBuffer();
+
+    delay(tDelay);
+    //Serial.println(max); Serial.println(countChar);
+}
+
+void Interface::popUpMessage(String label, String text)
+{
+    uint8_t sizeText = text.length(); 
+    uint8_t countLine{1}, countChar{}, maxChar{}, h_frame{}, border{5}; 
+
+    for (int i = 0; i < sizeText; i++)
+    {
+        if (text[i] != '\0')
+        {
+            countChar++;
+
+            if (text[i] == '\n')
+            {
+                maxChar = countChar;
+                countChar = 0;
+                countLine++;
+            }
+
+            if (countChar > maxChar) maxChar = countChar;
+        }
+    }
+    
+    h_frame = countLine * 10;
+
+    u8g2.clearBuffer();
+    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - border, (H_LCD/2) - 10 - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
+    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - (border + 3), (H_LCD/2) - 10 - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
+
+    _gfx.print(label, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - 10 - (border + 4));
+    _gfx.print(text, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2));
+    u8g2.sendBuffer();
+
+    //Serial.println(max); Serial.println(countChar);
+}
+
 /* button */
 bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
@@ -536,6 +607,12 @@ void Joystick::updatePositionXY()
     indexY1 = calculateIndexY1();
 }
 
+/* */
+void Joystick::resetPositionXY()
+{
+    COOR_X0 = 128; COOR_X1 = 128; COOR_Y0 = 80; COOR_Y1 = 80;
+}
+
 /* Updating Stick coordinates */
 void Joystick::updatePositionXY(uint delay)
 {
@@ -675,38 +752,7 @@ bool isTouched()
 /* Shows a notification about the start of sleep mode */
 void sleepModeScreen()
 {
-    u8g2.clearBuffer();
-    //u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
-    String textSleep = "Light sleep\nBye, bye! :)\n";
-    uint8_t sizeText = textSleep.length() - 1; 
-    uint8_t h_frame{10}; //10px height font
-    uint8_t maxChar{0}; int8_t count{0};
-
-    uint8_t border = 8; //px
-
-    for (int i = 0; i < sizeText; i++)
-    {
-        if (textSleep[i] == '\n')
-        {
-            h_frame += 10; 
-        }
-
-        count++;
-
-        if ((textSleep[i] == '\n'))
-        {
-            count = 0;
-        }
-
-        if (count > maxChar) maxChar = count;
-    }
-
-    
-    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2), (H_LCD/2), (maxChar * 6), h_frame);
-   
-    _gfx.print(textSleep + count, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2));
-
-    u8g2.sendBuffer();
+    _interface.popUpMessage("PwSM", "Light sleep.\nBye, bye my User!\n\nUse the Joystick to wake up!\0", 1000);
 }
 /* */
 void powerSaveDeepSleep()
@@ -990,7 +1036,11 @@ void systemViewList()
 
 }
 /* NULL function */
-void ff(){}
+void ff()
+{
+    _interface.popUpMessage("!", "Ohhh no :(\ntask-function not defined\0", 2500);
+    _joy.resetPositionXY();
+}
 
 /* APP */
 /* Desctop */
