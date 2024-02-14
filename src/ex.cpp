@@ -296,13 +296,13 @@ void Interface::message(String text, int duration)
 void Interface::popUpMessage(String label, String text, uint tDelay)
 {
     uint8_t sizeText = text.length(); 
-    uint8_t countLine{1}, countChar{}, maxChar{}, h_frame{}, border{5}; 
+    uint8_t countLine{1}, countChar{}, maxChar{}, h_frame{}, border{5}, a{}; 
 
     for (int i = 0; i < sizeText; i++)
     {
         if (text[i] != '\0')
         {
-            countChar++;
+            ++countChar;
 
             if (text[i] == '\n')
             {
@@ -315,18 +315,18 @@ void Interface::popUpMessage(String label, String text, uint tDelay)
         }
     }
     
-    h_frame = countLine * 10;
+    h_frame = countLine * 10; a = h_frame/2;
 
     u8g2.clearBuffer();
-    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - border, (H_LCD/2) - 10 - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
-    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - (border + 3), (H_LCD/2) - 10 - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
+    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - border, (H_LCD/2) - a - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
+    u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - (border + 3), (H_LCD/2) - a - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
 
-    _gfx.print(label, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - 10 - (border + 4));
-    _gfx.print(text, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2));
+    _gfx.print(label, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - a - (border + 4));
+    _gfx.print(text, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - a + 10);
     u8g2.sendBuffer();
 
     delay(tDelay);
-    //Serial.println(max); Serial.println(countChar);
+    Serial.println(maxChar); Serial.println(countChar);
 }
 
 void Interface::popUpMessage(String label, String text)
@@ -1038,7 +1038,7 @@ void systemViewList()
 /* NULL function */
 void ff()
 {
-    _interface.popUpMessage("!", "Ohhh no :(\ntask-function not defined\0", 2500);
+    _interface.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\nPlease try again!\0", 10000);
     _joy.resetPositionXY();
 }
 
