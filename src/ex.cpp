@@ -678,9 +678,9 @@ void sleepModeScreen()
     u8g2.clearBuffer();
     //u8g2.drawXBMP(((W_LCD - windows_width)/2), ((H_LCD - windows_height)/2) - 7, windows_width, windows_height, windows_bits); //88 88
     String textSleep = "Light sleep\nBye, bye! :)\n";
-    uint8_t sizeText = textSleep.length(); 
+    uint8_t sizeText = textSleep.length() - 1; 
     uint8_t h_frame{10}; //10px height font
-    uint8_t maxChar{0};
+    uint8_t maxChar{0}; int8_t count{0};
 
     uint8_t border = 8; //px
 
@@ -688,20 +688,23 @@ void sleepModeScreen()
     {
         if (textSleep[i] == '\n')
         {
-            h_frame += 10;
+            h_frame += 10; 
         }
-        if ((textSleep[i] == '\n') && (i > maxChar))
+
+        count++;
+
+        if ((textSleep[i] == '\n'))
         {
-            maxChar = i;
+            count = 0;
         }
-        
-        
+
+        if (count > maxChar) maxChar = count;
     }
 
     
     u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2), (H_LCD/2), (maxChar * 6), h_frame);
    
-    _gfx.print(textSleep + maxChar, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2));
+    _gfx.print(textSleep + count, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2));
 
     u8g2.sendBuffer();
 }
