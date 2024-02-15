@@ -122,6 +122,7 @@ public:
        Line break is supported - '\n'. */
     void message(String text, int duration);
     void popUpMessage(String label, String text, uint tDelay);
+    void popUpMessage(String label1, String label2, String text, uint tDelay);
     void popUpMessage(String label, String text);
 };
 
