@@ -16,7 +16,7 @@
 const int8_t VERSION_LIB[] = {1, 0};
 
 Graphics _gfx; Timer _delayCursor; Application _desc; Joystick _joy; Shortcut _myConsole;
-Cursor _crs; PowerSave _pwsDeep; Interface _interface;
+Cursor _crs; PowerSave _pwsDeep; Interface _mess;
 
 enum StateOs
 {
@@ -295,10 +295,11 @@ void Interface::message(String text, int duration)
 
 void Interface::popUpMessage(String label, String text, uint tDelay)
 {
-    uint8_t sizeText = text.length(); 
-    uint8_t countLine{1}, countChar{}, maxChar{}, h_frame{}, border{5}, a{}; 
+    uint8_t sizeText = text.length();
 
-    for (int i = 0; i < sizeText; i++)
+    uint8_t countLine{1}, countChar{0}, maxChar{}, h_frame{}, border{5}, a{}; 
+
+    for (int i = 0; i <= sizeText; i++)
     {
         if (text[i] != '\0')
         {
@@ -306,14 +307,28 @@ void Interface::popUpMessage(String label, String text, uint tDelay)
 
             if (text[i] == '\n')
             {
-                maxChar = countChar;
-                countChar = 0;
                 countLine++;
+
+                if ((text[i] == '\n') && (countChar > maxChar))
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
             }
 
+            if ((text[i] == '\0') || (text[i+1] == '\0'))
+            {
+                if (countChar > maxChar)
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
+            }
             if (countChar > maxChar) maxChar = countChar;
         }
     }
+
+    //if (countLine > 2) maxChar = maxChar - countLine;
     
     h_frame = countLine * 10; a = h_frame/2;
 
@@ -321,32 +336,51 @@ void Interface::popUpMessage(String label, String text, uint tDelay)
     u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - border, (H_LCD/2) - a - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
     u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - (border + 3), (H_LCD/2) - a - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
 
-    _gfx.print(label, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - a - (border + 4));
+    _gfx.print(label + maxChar, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - a - (border + 4));
     _gfx.print(text, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - a + 10);
     u8g2.sendBuffer();
 
     delay(tDelay);
-    Serial.println(maxChar); Serial.println(countChar);
+
+    //debug
+    /*Serial.println(maxChar); Serial.println(sizeText);
+    for (int i = 0; i <= sizeText; i++)
+    {
+        Serial.println(text[i], BIN);
+    }*/
 }
 
 void Interface::popUpMessage(String label, String text)
 {
-    uint8_t sizeText = text.length(); 
-    uint8_t countLine{1}, countChar{}, maxChar{}, h_frame{}, border{5}; 
+    uint8_t sizeText = text.length();
 
-    for (int i = 0; i < sizeText; i++)
+    uint8_t countLine{1}, countChar{0}, maxChar{}, h_frame{}, border{5}, a{}; 
+
+    for (int i = 0; i <= sizeText; i++)
     {
         if (text[i] != '\0')
         {
-            countChar++;
+            ++countChar;
 
             if (text[i] == '\n')
             {
-                maxChar = countChar;
-                countChar = 0;
                 countLine++;
+
+                if ((text[i] == '\n') && (countChar > maxChar))
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
             }
 
+            if ((text[i] == '\0') || (text[i+1] == '\0'))
+            {
+                if (countChar > maxChar)
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
+            }
             if (countChar > maxChar) maxChar = countChar;
         }
     }
@@ -752,7 +786,7 @@ bool isTouched()
 /* Shows a notification about the start of sleep mode */
 void sleepModeScreen()
 {
-    _interface.popUpMessage("PwSM", "Light sleep.\nBye, bye my User!\n\nUse the Joystick to wake up!\0", 1000);
+    _mess.popUpMessage("PwSM", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
 }
 /* */
 void powerSaveDeepSleep()
@@ -1038,7 +1072,13 @@ void systemViewList()
 /* NULL function */
 void ff()
 {
-    _interface.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\nPlease try again!\0", 10000);
+    _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\n\n\nPlease try again!\0\0", 10000);
+    _joy.resetPositionXY();
+}
+
+void ff2()
+{
+    _mess.popUpMessage("!", "Ohhh no :(\nPlease try again!\n\nTask-function not defined!\0\0", 10000);
     _joy.resetPositionXY();
 }
 
@@ -1048,6 +1088,7 @@ void desctop()
 {
     _gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
     _myConsole.shortcut("My Console", icon_mytablet_bits, 5, 30, ff, _joy.posX0, _joy.posY0);
+    _myConsole.shortcut("COM port", icon_com_port_bits, 5, 65, ff2, _joy.posX0, _joy.posY0);
 }
 
 /* TERMINAL */

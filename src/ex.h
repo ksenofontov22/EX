@@ -121,7 +121,7 @@ public:
     /* Output of a message to the user. Define the text-text and duration-duration.
        Line break is supported - '\n'. */
     void message(String text, int duration);
-    void popUpMessage(String label, String message, uint tDelay);
+    void popUpMessage(String label, String text, uint tDelay);
     void popUpMessage(String label, String text);
 };
 
