@@ -114,9 +114,11 @@ public:
     void timer(void (*f)(void), int interval);
 };
 
-class Interface
+class Interface : Joystick
 {
 private:
+    uint8_t xBorder{};
+    uint8_t yBorder{};
 public:
     /* Output of a message to the user. Define the text-text and duration-duration.
        Line break is supported - '\n'. */
@@ -124,6 +126,8 @@ public:
     void popUpMessage(String label, String text, uint tDelay);
     void popUpMessage(String label1, String label2, String text, uint tDelay);
     void popUpMessage(String label, String text);
+    bool dialogueMessage(String label, String text);
+    bool dialogueMessage(String label, String text, void (*f1)(), void (*f2)());
 };
 
 class Button : Joystick
@@ -134,6 +138,8 @@ public:
     /* The button starts the void-function, define the button text-text and output x-y-coordinates.
        xCursor-yCursor-coordinates of interaction with the cursor. */
     bool button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
+    /* Return boolean state */
+    bool button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
 };
 
 class Shortcut : Joystick

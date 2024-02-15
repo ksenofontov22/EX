@@ -16,7 +16,7 @@
 const int8_t VERSION_LIB[] = {1, 0};
 
 Graphics _gfx; Timer _delayCursor; Application _desc; Joystick _joy; Shortcut _myConsole;
-Cursor _crs; PowerSave _pwsDeep; Interface _mess;
+Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no;
 
 enum StateOs
 {
@@ -442,6 +442,9 @@ void Interface::popUpMessage(String label, String text)
     
     h_frame = countLine * 10; a = h_frame/2;
 
+    xBorder = 128 /* W_LCD/2 */ - (maxChar*6)/2;
+    yBorder = 80  /* H_LCD/2 */ + a + (border + 11);
+
     u8g2.clearBuffer();
     u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - border, (H_LCD/2) - a - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
     u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - (border + 3), (H_LCD/2) - a - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
@@ -453,7 +456,83 @@ void Interface::popUpMessage(String label, String text)
     //Serial.println(max); Serial.println(countChar);
 }
 
-/* button */
+bool Interface::dialogueMessage(String label, String text, void (*f1)(), void (*f2)()){}
+
+bool Interface::dialogueMessage(String label, String text)
+{
+    while (true)
+    {
+        uint8_t sizeText = text.length();
+
+        uint8_t countLine{1}, countChar{0}, maxChar{}, h_frame{}, border{5}, a{};        
+        
+        for (int i = 0; i <= sizeText; i++)
+        {
+            if (text[i] != '\0')
+            {
+                ++countChar;
+
+                if (text[i] == '\n')
+                {
+                    countLine++;
+
+                    if ((text[i] == '\n') && (countChar > maxChar))
+                    {
+                        maxChar = countChar;
+                        countChar = 0;
+                    }
+                }
+
+                if ((text[i] == '\0') || (text[i + 1] == '\0'))
+                {
+                    if (countChar > maxChar)
+                    {
+                        maxChar = countChar;
+                        countChar = 0;
+                    }
+                }
+                if (countChar > maxChar)
+                    maxChar = countChar;
+            }
+        }
+
+        h_frame = countLine * 10;
+        a = h_frame / 2;
+
+        xBorder = 128 /* W_LCD/2 */ - (maxChar * 6) / 2;
+        yBorder = 80  /* H_LCD/2 */ + a + (border + 11);
+
+        u8g2.clearBuffer();
+        u8g2.drawFrame(((W_LCD / 2) - (maxChar * 6) / 2) - border, (H_LCD / 2) - a - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
+        u8g2.drawFrame(((W_LCD / 2) - (maxChar * 6) / 2) - (border + 3), (H_LCD / 2) - a - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
+
+        _gfx.print(label, (W_LCD / 2) - (maxChar * 6) / 2, (H_LCD / 2) - a - (border + 4));
+        _gfx.print(text, (W_LCD / 2) - (maxChar * 6) / 2, (H_LCD / 2) - a + 10);
+
+        //_ok.button(" OK ", xBorder - 8, yBorder + 2, _joy.posX0, _joy.posY0);
+        //_no.button(" NO ", xBorder + 20, yBorder + 2, _joy.posX0, _joy.posY0);
+
+        if (_ok.button(" OK ", 128 - 26, yBorder + 2, _joy.posX0, _joy.posY0))
+        {
+            return true;
+            break;
+        }
+        if (_no.button(" NO ", 130, yBorder + 2, _joy.posX0, _joy.posY0))
+        {
+            return false;
+            break;
+        }
+
+        _joy.updatePositionXY();
+        _crs.cursor(true, _joy.posX0, _joy.posY0);
+        u8g2.sendBuffer();
+    }
+
+    return true;
+}
+
+/* BUTTON */
+/* Button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
   uint8_t sizeText = text.length();
@@ -473,6 +552,36 @@ bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCur
   {
     u8g2.setDrawColor(1);
     u8g2.drawRFrame(x, y - 8, (sizeText * 5) + 5, 10, 2);
+  }
+
+  u8g2.setCursor(x + 3, y);
+  u8g2.setFont(u8g2_font_profont10_mr);
+  u8g2.setFontMode(1);
+  u8g2.setDrawColor(2);
+  u8g2.print(text);
+  u8g2.setFontMode(0);
+  
+  return false;
+}
+/* Button return boolean state */
+bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
+{
+  uint8_t sizeText = text.length();
+
+  if ((xCursor >= x && xCursor <= (x + (sizeText * 5) + 4)) && (yCursor >= y - 8 && yCursor <= y + 2))
+  {
+    u8g2.setDrawColor(1);
+    u8g2.drawBox(x, y - 8, (sizeText * 5) + 5, 10);
+
+    if (Joystick::pressKeyA() == true)
+    {
+      return true;
+    }
+  }
+  else
+  {
+    u8g2.setDrawColor(1);
+    u8g2.drawFrame(x, y - 8, (sizeText * 5) + 5, 10);
   }
 
   u8g2.setCursor(x + 3, y);
@@ -1133,7 +1242,8 @@ void ff()
 
 void ff2()
 {
-    _mess.popUpMessage("!","A - OK" , "Ohhh no :(\nTask-function not defined!\0", 5000);
+    //_mess.popUpMessage("!","A - OK" , "Ohhh no :(\nTask-function not defined!\0", 5000);
+    _mess.dialogueMessage("Question", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
 
