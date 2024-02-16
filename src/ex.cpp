@@ -523,12 +523,10 @@ bool Interface::dialogueMessage(String label, String text)
             break;
         }
 
-        _joy.updatePositionXY();
+        _joy.updatePositionXY(10);
         _crs.cursor(true, _joy.posX0, _joy.posY0);
         u8g2.sendBuffer();
     }
-
-    return true;
 }
 
 /* BUTTON */
@@ -1243,7 +1241,7 @@ void ff()
 void ff2()
 {
     //_mess.popUpMessage("!","A - OK" , "Ohhh no :(\nTask-function not defined!\0", 5000);
-    _mess.dialogueMessage("Question", "Are you sure you want\nto close the task?\0");
+    _mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
 
