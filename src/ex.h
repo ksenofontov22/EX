@@ -58,10 +58,10 @@ public:
 
     /* Updating Stick coordinates. */
     void updatePositionXY();
-    /* Reset position Sticks */
-    void resetPositionXY();
     /* Updating Stick coordinates. And delay update position. */
     void updatePositionXY(uint delay);
+    /* Reset position Sticks */
+    void resetPositionXY();
 
     /* Counts objects by +1, normally 0 */
     int8_t calculateIndexY0();
