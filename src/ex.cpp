@@ -15,7 +15,7 @@
 //version library
 const int8_t VERSION_LIB[] = {1, 0};
 
-Graphics _gfx; Timer _delayCursor; Application _desc; Joystick _joy; Shortcut _myConsole;
+Graphics _gfx; Timer _delayCursor, _trm0; Application _desc; Joystick _joy; Shortcut _myConsole;
 Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no;
 
 enum StateOs
@@ -37,6 +37,8 @@ enum StateOs
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
 
+//State cursor
+int8_t STATE_CURSOR{0}; bool FLAG_CURSOR{false};
 //buffer
 String BUFFER_STRING{};
 int BUFFER_INT{};
@@ -55,14 +57,17 @@ int H_LCD{160}, W_LCD{256};
 /* Analog-to-digital converter resolution (Chip PICO 2040). */
 const int8_t RESOLUTION_ADC{12};
 /* Port data. */
-const int8_t PIN_STICK_0X = 34; // adc 0
-const int8_t PIN_STICK_0Y = 35; // adc 1
+const int8_t PIN_STICK_0X = 33; // adc 
+const int8_t PIN_STICK_0Y = 32; // adc 
 
-const int8_t PIN_STICK_1Y = 36; // adc 2
-const int8_t PIN_STICK_1X = 39; // adc 3
+const int8_t PIN_STICK_1Y = 34; // adc 
+const int8_t PIN_STICK_1X = 35; // adc 
 
-const int8_t PIN_BUTTON_STICK_0 = 32;  // gp 
-const int8_t PIN_BUTTON_STICK_1 = 33;  // gp 
+const int8_t PIN_BUTTON_ENTER = 27;  // gp 
+const int8_t PIN_BUTTON_EX    = 14;  // gp 
+const int8_t PIN_BUTTON_A     = 12;  // gp
+const int8_t PIN_BUTTON_B     = 13;  // gp
+
 const int8_t PIN_BACKLIGHT_LCD = 25;   // gp 
 const int8_t PIN_BUZZER = 26;          // gp 
 
@@ -88,8 +93,9 @@ void Graphics::initializationSystem()
     /* GPIO release from sleep */
     //esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
     //esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1);
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_34, 1);
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_35, 1);
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
+    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1); // Stick 0
+    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1); // EX button
     
     //setting the operating system state
     //setting display, contrast
@@ -100,6 +106,12 @@ void Graphics::initializationSystem()
     //display backlight
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
     digitalWrite(PIN_BACKLIGHT_LCD, true);
+    //PIN mode
+    pinMode(PIN_BUTTON_ENTER, INPUT);
+    pinMode(PIN_BUTTON_EX, INPUT);
+    pinMode(PIN_BUTTON_A, INPUT);
+    pinMode(PIN_BUTTON_B, INPUT);
+
     //platform logo output
     image_width = windows_width;
     image_height = windows_height;
@@ -523,7 +535,7 @@ bool Interface::dialogueMessage(String label, String text)
             break;
         }
 
-        _joy.updatePositionXY();
+        _joy.updatePositionXY(25);
         _crs.cursor(true, _joy.posX0, _joy.posY0);
         u8g2.sendBuffer();
     }
@@ -542,7 +554,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCur
     u8g2.setDrawColor(1);
     u8g2.drawRBox(x, y - 8, (sizeText * 5) + 5, 10, 2);
 
-    if (Joystick::pressKeyA() == true)
+    if (Joystick::pressKeyENTER() == true)
     {
       f();
       return true;
@@ -573,7 +585,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
     u8g2.setDrawColor(1);
     u8g2.drawBox(x, y - 8, (sizeText * 5) + 5, 10);
 
-    if (Joystick::pressKeyA() == true)
+    if (Joystick::pressKeyENTER() == true)
     {
       return true;
     }
@@ -605,7 +617,7 @@ bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(v
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
     u8g2.drawFrame(x, y, 32, 32);
-    if (Joystick::pressKeyA() == true)
+    if (Joystick::pressKeyENTER() == true)
     {
       f();
       return true;
@@ -625,24 +637,48 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
     u8g2.drawFrame(x, y, 32, 32);
+    
     BUFFER_STRING = name;
     
-    if (Joystick::pressKeyA() == true)
+    if (Joystick::pressKeyENTER() == true)
     {
       f();
       return true;
     }
   }
-  else BUFFER_STRING = "";
+  else
+  {
+    
+  }
 
   return false;
 }
 
 /* Joystic */
 /* system button control */
+bool Joystick::pressKeyENTER()
+{
+    if (digitalRead(PIN_BUTTON_ENTER) == true)
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
+bool Joystick::pressKeyEX()
+{
+    if (digitalRead(PIN_BUTTON_EX) == true)
+    {
+        return true;
+    }
+    else
+        return false;
+}
+
 bool Joystick::pressKeyA()
 {
-    if (digitalRead(PIN_BUTTON_STICK_0) == false)
+    if (digitalRead(PIN_BUTTON_A) == true)
     {
         return true;
     }
@@ -652,7 +688,7 @@ bool Joystick::pressKeyA()
 
 bool Joystick::pressKeyB()
 {
-    if (digitalRead(PIN_BUTTON_STICK_1) == false)
+    if (digitalRead(PIN_BUTTON_B) == true)
     {
         return true;
     }
@@ -665,30 +701,30 @@ int Joystick::calculatePositionY0() // 0y
 {
     RAW_DATA_Y0 = analogRead(PIN_STICK_0Y);
 
-    if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 500)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
-    {
-        COOR_Y0 -= 1;
-        if (COOR_Y0 <= 0) COOR_Y0 = 160;
-        return COOR_Y0;
-    }
-    else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
-    {
-        COOR_Y0 -= 2;
-        if (COOR_Y0 <= 0) COOR_Y0 = 160;
-        return COOR_Y0;
-    }
-    else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 500)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
-    {
-        COOR_Y0 += 1;
-        if (COOR_Y0 >= 160) COOR_Y0 = 0;
-        return COOR_Y0;
-    }
-    else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
+    if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 600)) /*&& (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100))*/)
     {
         COOR_Y0 += 2;
         if (COOR_Y0 >= 160) COOR_Y0 = 0;
         return COOR_Y0;
     }
+    /*else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
+    {
+        COOR_Y0 -= 2;
+        if (COOR_Y0 <= 0) COOR_Y0 = 160;
+        return COOR_Y0;
+    }*/
+    else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 600)) /*&& (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100))*/)
+    {
+        COOR_Y0 -= 2;
+        if (COOR_Y0 <= 0) COOR_Y0 = 160;
+        return COOR_Y0;
+    }
+   /*else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
+    {
+        COOR_Y0 += 2;
+        if (COOR_Y0 >= 160) COOR_Y0 = 0;
+        return COOR_Y0;
+    }*/
     else
         return COOR_Y0;
 }
@@ -729,32 +765,32 @@ int Joystick::calculatePositionX0() // 0x
 {
     RAW_DATA_X0 = analogRead(PIN_STICK_0X);
 
-    if ((RAW_DATA_X0 < (DEF_RES_X0 - 500)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
+    if ((RAW_DATA_X0 < (DEF_RES_X0 - 600)) /*&& (RAW_DATA_X0 > (DEF_RES_X0 - 1200))*/)
     {
-        COOR_X0 += 1;
-        if (COOR_X0 >= 256) COOR_X0 = 0;
+        COOR_X0 -= 2;
+        if (COOR_X0 <= 0) COOR_X0 = 256;
         return COOR_X0; 
 
     }
-    else if (RAW_DATA_X0 < (DEF_RES_X0 - 1100))
+    /*else if (RAW_DATA_X0 < (DEF_RES_X0 - 1100))
     {
         COOR_X0 += 2;
         if (COOR_X0 >= 256) COOR_X0 = 0;
         return COOR_X0;
 
-    }
-    else if ((RAW_DATA_X0 > (DEF_RES_X0 + 500)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
+    }*/
+    else if ((RAW_DATA_X0 > (DEF_RES_X0 + 600)) /*&& (RAW_DATA_X0 < (DEF_RES_X0 + 1100))*/)
     {
-        COOR_X0 -= 1;
-        if (COOR_X0 <= 0) COOR_X0 = 256;
+        COOR_X0 += 2;
+        if (COOR_X0 >= 256) COOR_X0 = 0;
         return COOR_X0; 
     }
-    else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
+    /*else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
     {
         COOR_X0 -= 2;
         if (COOR_X0 <= 0) COOR_X0 = 256;
         return COOR_X0;
-    }
+    }*/
     else
         return COOR_X0;
 }
@@ -962,7 +998,7 @@ void powerSaveDeepSleep()
     
     if (_joy.posY0 >= 150) BUFFER_STRING = "Light powersave mode";
     
-    if ((TIMER - screenTiming > 30000) && (_joy.posY0 >= 150))
+    if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
         screenTiming = TIMER;
 
@@ -973,7 +1009,7 @@ void powerSaveDeepSleep()
         }
     }
     
-    if ((TIMER - screenTiming > 30000) && (_joy.posY0 < 150))
+    if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
     {
         screenTiming = TIMER;
 
@@ -1216,17 +1252,28 @@ void Application::window(String name, String command,
 void Application::window(String name){}
 
 /* TASK-FUNCTION */
+void clearBufferString()
+{
+    BUFFER_STRING = "";
+}
 /* System tray */
 void systemTray()
 {
     u8g2.drawHLine(0, 150, 256);
-    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
+    _gfx.print(BUFFER_STRING, 5, 159, 8, 5); _trm0.timer(clearBufferString, 100);
+    
 }
 /* System cursor */
 void systemCursor()
 {
     _joy.updatePositionXY(25);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
+}
+/* System RawADC */
+void systemRawADC()
+{
+    String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + "Coord Y: " + (String)_joy.RAW_DATA_Y0;
+    BUFFER_STRING = text; 
 }
 /* System viewList */
 void systemViewList()
@@ -1253,7 +1300,7 @@ void desctop()
 {
     _gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
     _myConsole.shortcut("My Console", icon_mytablet_bits, 5, 30, ff, _joy.posX0, _joy.posY0);
-    _myConsole.shortcut("COM port", icon_com_port_bits, 5, 65, ff2, _joy.posX0, _joy.posY0);
+    _myConsole.shortcut("Serial port", icon_com_port_bits, 5, 65, ff2, _joy.posX0, _joy.posY0);
 }
 
 /* TERMINAL */
@@ -1278,6 +1325,9 @@ App commands[]
     {"clearcomm", "Clear command",  clearCommandTerminal, false,   0, NULL, 0},
     {"desctop",   "Desctop",        desctop,              true,    0, NULL, 1},
     {"deepsleep", "Deep sleep PWS-mode", powerSaveDeepSleep, true, 0, NULL, 0},
+    {"rawadc",    "Raw data ADC",   systemRawADC,         false,   0, NULL, 0},
+    {"clearbuffer","Clear Buffer",  clearBufferString,    false,   0, NULL, 0},
+    
     {"systray",   "Tray",           systemTray,           true,    0, NULL, 0},
     {"syscursor", "Cursor",         systemCursor,         true,    0, NULL, 0},
 };

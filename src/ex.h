@@ -36,10 +36,10 @@ private:
     int COOR_X1 = 128;
     /* Reset the counter of objects. */
     int OBJ_Y0{}, OBJ_Y1{}, OBJ_X0{}, OBJ_X1{};
-    /* Raw data from Sticks. */
-    int RAW_DATA_Y0{}, RAW_DATA_Y1{}, RAW_DATA_X0{}, RAW_DATA_X1{};
     unsigned long prevTime{};
 public:
+    /* Raw data from Sticks. */
+    int RAW_DATA_Y0{}, RAW_DATA_Y1{}, RAW_DATA_X0{}, RAW_DATA_X1{};
     /* Contains the coordinates of the Sticks along the axes. */
     int calculatePositionX0();
     int calculatePositionY0();
@@ -51,6 +51,8 @@ public:
     int indexX0{}, indexY0{}, indexX1{}, indexY1{};
     
     /* Generates 1 or 0 if the button is pressed or not. */
+    bool pressKeyENTER();
+    bool pressKeyEX();
     bool pressKeyA();
     bool pressKeyB();
 
