@@ -239,22 +239,9 @@ class Application
     protected:
     private:
     public:
-    /* List state window */
-    enum STATEWINDOW
-    {
-        Normal,
-        Collapse,
-        Expand,
-        Close
-    };
-    
-    STATEWINDOW stateWindow;
+
     /* Applic */
-    void window(String name, String command, 
-                bool state, uint8_t priority, STATEWINDOW num, 
-                int sizeW, int sizeH, 
-                void (*fCalculation)(void), void (*fRender)(void));
-    void window(String name);
+    void window(String name, void (*f1)(void), void (*f2)(void));
 };
 
 class Terminal

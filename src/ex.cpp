@@ -7,6 +7,7 @@
   [!] midi to arduino tones converter https://arduinomidi.netlify.app/
 */
 
+#include <iostream>
 #include <Arduino.h>
 #include <U8g2lib.h> 
 #include "ex.h"
@@ -15,8 +16,11 @@
 //version library
 const int8_t VERSION_LIB[] = {1, 0};
 
-Graphics _gfx; Timer _delayCursor, _trm0; Application _desc; Joystick _joy; Shortcut _myConsole;
+Graphics _gfx; Timer _delayCursor, _trm0; Application _app; Joystick _joy; Shortcut _myConsole;
 Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no;
+
+/* Prototype function */
+void clearCommandTerminal(); void testApp();
 
 enum StateOs
 {
@@ -37,9 +41,7 @@ enum StateOs
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
 
-//State cursor
-int8_t STATE_CURSOR{0}; bool FLAG_CURSOR{false};
-//buffer
+//buffer -->use enum?
 String BUFFER_STRING{};
 int BUFFER_INT{};
 double BUFFER_DOUBLE{};
@@ -1238,16 +1240,22 @@ void Melody::song(listMelody num)
 }
 
 /* Application */
-void Application::window(String name, String command, 
-            bool state, uint8_t priority, STATEWINDOW num, 
-            int sizeW, int sizeH, 
-            void (*fCalculation)(void), void (*fRender)(void))
-            {
-                fCalculation();
-                fRender();
-            }
+void Application::window(String name, void (*f1)(void), void (*f2)(void))
+{
+    f1; //calculate
 
-void Application::window(String name){}
+    //while (true)
+    //{
+        //u8g2.clearBuffer();
+
+        _gfx.print(name, 5, 9, 8, 5);
+        u8g2.drawFrame(0, 10, 256, 141);
+
+        f2; //render
+
+        //u8g2.sendBuffer();
+    //}
+}
 
 /* TASK-FUNCTION */
 void clearBufferString()
@@ -1278,7 +1286,10 @@ void systemViewList()
 {
 
 }
+
 /* NULL function */
+void null(){}
+
 void ff()
 {
     _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
@@ -1287,8 +1298,8 @@ void ff()
 
 void ff2()
 {
-    //_mess.popUpMessage("!","A - OK" , "Ohhh no :(\nTask-function not defined!\0", 5000);
-    _mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
+    _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
+    //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
 
@@ -1299,18 +1310,18 @@ void desctop()
     _gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
     _myConsole.shortcut("My Console", icon_mytablet_bits, 5, 30, ff, _joy.posX0, _joy.posY0);
     _myConsole.shortcut("Serial port", icon_com_port_bits, 5, 65, ff2, _joy.posX0, _joy.posY0);
+    _myConsole.shortcut("Test Application", icon_tech_info_bits, 5, 100, testApp, _joy.posX0, _joy.posY0);
 }
 
 /* TERMINAL */
-/* Prototype function */
-void clearCommandTerminal();
-
 /* command type */
 struct App
 {
     char const *text;       //command
     char const *name;       //name task-function
+
     void (*f)(void);        //task-function
+
     bool active;            //activ status task-function
     int priority;           //execution priority
     const uint8_t *bitMap;  //icon task-function
@@ -1325,7 +1336,9 @@ App commands[]
     {"deepsleep", "Deep sleep PWS-mode", powerSaveDeepSleep, true, 0, NULL, 0},
     {"rawadc",    "Raw data ADC",   systemRawADC,         false,   0, NULL, 0},
     {"clearbuffer","Clear Buffer",  clearBufferString,    false,   0, NULL, 0},
-    
+
+    {"test","Test",  testApp,    false,   0, NULL, 2},
+
     {"systray",   "Tray",           systemTray,           true,    0, NULL, 0},
     {"syscursor", "Cursor",         systemCursor,         true,    0, NULL, 0},
 };
@@ -1393,4 +1406,18 @@ void Terminal::terminal(void(*f)())
       }
     }
   }
+}
+
+void testApp()
+{
+    commands[1].active = false;
+    commands[5].active = true;
+
+    _app.window("Test Application", null, null);
+    
+    if (_joy.pressKeyEX() == true)
+    {
+        commands[1].active = true;
+        commands[5].active = false;
+    }
 }
