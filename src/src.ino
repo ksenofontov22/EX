@@ -16,12 +16,12 @@ void user_gfx_text()
 
 void user_terminal()
 {
-    userTrm.tick();
+    //userTrm.tick();
 }
 
 void setup()
 {  
-    userTrm.attach(1, user_gfx_text, 10);
+    //userTrm.attach(1, user_gfx_text, 10);
     gfx.initializationSystem();
 }
 

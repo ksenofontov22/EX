@@ -17,7 +17,7 @@
 const int8_t VERSION_LIB[] = {1, 0};
 
 Graphics _gfx; Timer _delayCursor, _trm0; Application _app; Joystick _joy; Shortcut _myConsole;
-Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no;
+Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no, _collapse, _expand, _close;
 
 /* Prototype function */
 void clearCommandTerminal(); void testApp();
@@ -1242,19 +1242,20 @@ void Melody::song(listMelody num)
 /* Application */
 void Application::window(String name, void (*f1)(void), void (*f2)(void))
 {
-    f1; //calculate
-
-    //while (true)
-    //{
-        //u8g2.clearBuffer();
-
-        _gfx.print(name, 5, 9, 8, 5);
+    f1;
+    
+    //draw window
+    {
+        _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
         u8g2.drawFrame(0, 10, 256, 141);
+    }
 
-        f2; //render
+    {
+        _collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0);
+        _close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0);
+    }
 
-        //u8g2.sendBuffer();
-    //}
+    f2;
 }
 
 /* TASK-FUNCTION */
@@ -1265,6 +1266,7 @@ void clearBufferString()
 /* System tray */
 void systemTray()
 {
+    u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
     _gfx.print(BUFFER_STRING, 5, 159, 8, 5); _trm0.timer(clearBufferString, 100);
     
