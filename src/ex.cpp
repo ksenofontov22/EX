@@ -5,6 +5,7 @@
   [!] bmp to xbmp image converter https://www.online-utility.org/image/convert/to/XBM
                                   https://windows87.github.io/xbm-viewer-converter/
   [!] midi to arduino tones converter https://arduinomidi.netlify.app/
+      ntp client                  https://github.com/arduino-libraries/NTPClient
 */
 
 #include <iostream>
@@ -13,14 +14,25 @@
 #include "ex.h"
 #include "ex_xbm.h"
 
+#include <WiFi.h>
+#include "NTPClient.h"
+#include <WiFiUdp.h>
+
+
 //version library
 const int8_t VERSION_LIB[] = {1, 0};
 
-Graphics _gfx; Timer _delayCursor, _trm0; Application _app; Joystick _joy; Shortcut _myConsole;
+Graphics _gfx; Timer _delayCursor, _trm0, _trm1; Application _app; Joystick _joy; Shortcut _myConsole;
 Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no, _collapse, _expand, _close;
+TimeNTP _timentp; Task _task;
+
+/* Time NTP*/
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 
 /* Prototype function */
-void clearCommandTerminal(); void testApp();
+void clearCommandTerminal(); void testApp(); void wifiSetup(); void wifiConnect(); void timeNtpSetup();
+void timeNtpUpdate();
 
 enum StateOs
 {
@@ -121,7 +133,7 @@ void Graphics::initializationSystem()
     u8g2.clearBuffer();
     u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, windows_bits); //88 88
     _gfx.print(10, "the experience system", 65, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
-    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] , 0, H_LCD, 10, 4);
+    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + BUFFER_STRING, 0, H_LCD, 10, 4);
     u8g2.sendBuffer();
     //--
     delay(2500);
@@ -1239,25 +1251,6 @@ void Melody::song(listMelody num)
     }
 }
 
-/* Application */
-void Application::window(String name, void (*f1)(void), void (*f2)(void))
-{
-    f1;
-    
-    //draw window
-    {
-        _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
-        u8g2.drawFrame(0, 10, 256, 141);
-    }
-
-    {
-        _collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0);
-        _close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0);
-    }
-
-    f2;
-}
-
 /* TASK-FUNCTION */
 void clearBufferString()
 {
@@ -1268,9 +1261,16 @@ void systemTray()
 {
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
-    _gfx.print(BUFFER_STRING, 5, 159, 8, 5); _trm0.timer(clearBufferString, 100);
+    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
     
+    /* IPAddress ip = WiFi.localIP();
+sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
+
+    _gfx.print(WiFi.localIP().toString(), 135, 159, 8, 5);
+
+    _trm0.timer(clearBufferString, 100);
 }
+
 /* System cursor */
 void systemCursor()
 {
@@ -1325,7 +1325,7 @@ struct App
     void (*f)(void);        //task-function
 
     bool active;            //activ status task-function
-    int priority;           //execution priority
+    int indexTask;          //
     const uint8_t *bitMap;  //icon task-function
     bool state;             //0-task-function any 1-Application
 };
@@ -1333,16 +1333,24 @@ struct App
 /* enumeration of objects - commands */
 App commands[]
 {
-    {"clearcomm", "Clear command",  clearCommandTerminal, false,   0, NULL, 0},
-    {"desctop",   "Desctop",        desctop,              true,    0, NULL, 1},
-    {"deepsleep", "Deep sleep PWS-mode", powerSaveDeepSleep, true, 0, NULL, 0},
-    {"rawadc",    "Raw data ADC",   systemRawADC,         false,   0, NULL, 0},
-    {"clearbuffer","Clear Buffer",  clearBufferString,    false,   0, NULL, 0},
+    //system task
+    {"clearcomm", "Clear command",  clearCommandTerminal, false,     0, NULL, 0},
+    {"deepsleep", "Deep sleep PWS-mode", powerSaveDeepSleep, true,   1, NULL, 0},
+    {"rawadc",    "Raw data ADC",   systemRawADC,         false,     2, NULL, 0},
+    {"clearbuffer","Clear Buffer",  clearBufferString,    false,     3, NULL, 0},
 
-    {"test","Test",  testApp,    false,   0, NULL, 2},
+    //app
+    {"desctop",   "Desctop",        desctop,              true,    100, NULL, 1},
+    {"test",      "Test",           testApp,              false,   101, NULL, 2},
 
-    {"systray",   "Tray",           systemTray,           true,    0, NULL, 0},
-    {"syscursor", "Cursor",         systemCursor,         true,    0, NULL, 0},
+    {"wifisetup", "WiFi",           wifiSetup,            true,    200, NULL, 0},
+    {"wificonect","WiFi",           wifiConnect,          true,    201, NULL, 0},
+    {"ntpsetup",  "Time NTP Setup", timeNtpSetup,         true,    202, NULL, 0},
+    {"ntptime",   "Time NTP",       timeNtpUpdate,        true,    203, NULL, 0},
+
+    //system graphics-task
+    {"systray",   "Tray",           systemTray,           true,    300, NULL, 0},
+    {"syscursor", "Cursor",         systemCursor,         true,    301, NULL, 0},
 };
 
 /* delete all commands */
@@ -1410,16 +1418,93 @@ void Terminal::terminal(void(*f)())
   }
 }
 
+/* TASK */
+void Task::taskKill(int indexTask)
+{
+    for (App &command : commands)
+    {
+        if ((command.active == true) && (command.indexTask == indexTask))
+        {
+            command.active = false;
+        }
+    }
+}
+
+void Task::taskRun(int indexTask)
+{
+    for (App &command : commands)
+    {
+        if ((command.active == false) && (command.indexTask == indexTask))
+        {
+            command.active = true;
+        }
+    }
+}
+
+/* Application */
+void Application::window(String name, int indexTask, void (*f1)(void), void (*f2)(void))
+{
+    f1;
+    
+    //draw window
+    {
+        _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
+        u8g2.drawFrame(0, 10, 256, 141);
+    }
+
+    {
+        if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
+        if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
+        {
+            _task.taskKill(indexTask);
+            _task.taskRun(100);
+        }
+    }
+    f2;
+}
+
+/* TEST */
 void testApp()
 {
-    commands[1].active = false;
-    commands[5].active = true;
+    _task.taskKill(100);
+    _task.taskRun(101);
 
-    _app.window("Test Application", null, null);
+    _app.window("Test Application", 101, null, null);
     
-    if (_joy.pressKeyEX() == true)
+    /*if (_joy.pressKeyEX() == true)
     {
-        commands[1].active = true;
-        commands[5].active = false;
+        _task.taskRun(100);
+        _task.taskKill(101);
+    }*/
+}
+
+/* WIFI */
+void wifiSetup()
+{
+    WiFi.begin("Allowed", "Serjant1985"); commands[6].active = false;
+}
+
+void wifiConnect()
+{
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        BUFFER_STRING = "Wi-Fi..."; 
     }
+    else BUFFER_STRING = "Wi-Fi connected"; commands[7].active = false;
+    
+    //uint8_t ip = WiFi.localIP();
+    //disconnect WiFi as it's no longer needed
+    //WiFi.disconnect(true);
+    //WiFi.mode(WIFI_OFF);
+}
+
+void timeNtpSetup()
+{
+    commands[8].active = false;
+}
+
+void timeNtpUpdate()
+{
+    timeClient.update();
+    _gfx.print((String)timeClient.getFormattedTime(), 211, 159, 8, 5);
 }

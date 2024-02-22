@@ -7,6 +7,7 @@ Shortcut iconSapper, iconGears;
 PowerSave pws;
 Terminal trm;
 UserTerminal <5> userTrm;
+TimeNTP timentp;
 
 void user_gfx_text()
 {
@@ -23,6 +24,9 @@ void setup()
 {  
     //userTrm.attach(1, user_gfx_text, 10);
     gfx.initializationSystem();
+    //timentp.setupWifi("free", "");
+    //timentp.setupTime();
+
 }
 
 void loop()

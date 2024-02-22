@@ -241,7 +241,7 @@ class Application
     public:
 
     /* Applic */
-    void window(String name, void (*f1)(void), void (*f2)(void));
+    void window(String name, int indexTask, void (*f1)(void), void (*f2)(void));
 };
 
 class Terminal
@@ -363,6 +363,21 @@ public:
         }
         return nearPrd;
     }
+};
+
+class TimeNTP
+{
+private:
+public:
+
+};
+
+class Task
+{
+private:
+public:
+    void taskKill(int indexTask);
+    void taskRun(int indexTask);
 };
 
 #endif
