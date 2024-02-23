@@ -114,6 +114,7 @@ private:
 public:
     /* Starting a void-function on a interval-timer. */
     void timer(void (*f)(void), int interval);
+    void stopwatch(void (*f)(void), int interval);
 };
 
 class Interface : Joystick
@@ -155,6 +156,9 @@ public:
     /* A shortcut on the desktop to launch the void-function.
        Define an icon-image with a resolution of 32x32 pixels + name */
     bool shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
+    
+    bool shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
+
 };
 
 class Cursor

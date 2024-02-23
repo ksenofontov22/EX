@@ -22,17 +22,21 @@
 //version library
 const int8_t VERSION_LIB[] = {1, 0};
 
-Graphics _gfx; Timer _delayCursor, _trm0, _trm1; Application _app; Joystick _joy; Shortcut _myConsole;
-Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no, _collapse, _expand, _close;
+Graphics _gfx; Timer _delayCursor, _trm0, _trm1, _stop; Application _app; Joystick _joy; Shortcut _myConsole, _wifi;
+Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no, _collapse, _expand, _close, _disconnect;
 TimeNTP _timentp; Task _task;
+
+/* WIFI */
+bool stateWifiSetup = false;
+bool stateWifi = false;
 
 /* Time NTP*/
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 
 /* Prototype function */
-void clearCommandTerminal(); void testApp(); void wifiSetup(); void wifiConnect(); void timeNtpSetup();
-void timeNtpUpdate();
+void clearCommandTerminal(); void testApp(); void myWifiConnect(); void myWifiDisconnect(); void timeNtpSetup();
+void timeNtpUpdate(); void myDesctop();
 
 enum StateOs
 {
@@ -564,7 +568,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCur
   if ((xCursor >= x && xCursor <= (x + (sizeText * 5) + 4)) && (yCursor >= y - 8 && yCursor <= y + 2))
   {
     u8g2.setDrawColor(1);
-    u8g2.drawRBox(x, y - 8, (sizeText * 5) + 5, 10, 2);
+    u8g2.drawBox(x, y - 8, (sizeText * 5) + 5, 10);
 
     if (Joystick::pressKeyENTER() == true)
     {
@@ -575,7 +579,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCur
   else
   {
     u8g2.setDrawColor(1);
-    u8g2.drawRFrame(x, y - 8, (sizeText * 5) + 5, 10, 2);
+    u8g2.drawFrame(x, y - 8, (sizeText * 5) + 5, 10);
   }
 
   u8g2.setCursor(x + 3, y);
@@ -666,6 +670,32 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   return false;
 }
 
+bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
+{
+    u8g2.setDrawColor(1);
+    u8g2.setBitmapMode(0);
+
+    //u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
+
+    if ((xCursor >= x && xCursor <= (x + w)) && (yCursor >= y && yCursor <= (y + h)))
+    {
+        u8g2.drawFrame(x, y, w, h);
+
+        BUFFER_STRING = name;
+
+        if (Joystick::pressKeyENTER() == true)
+        {
+            f();
+            return true;
+        }
+    }
+    else
+    {
+    }
+
+    return false;
+}
+
 /* Joystic */
 /* system button control */
 bool Joystick::pressKeyENTER()
@@ -716,7 +746,7 @@ int Joystick::calculatePositionY0() // 0y
     if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 600)) /*&& (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100))*/)
     {
         COOR_Y0 += 2;
-        if (COOR_Y0 >= 160) COOR_Y0 = 0;
+        if (COOR_Y0 >= 160) COOR_Y0 = 160;
         return COOR_Y0;
     }
     /*else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
@@ -728,7 +758,7 @@ int Joystick::calculatePositionY0() // 0y
     else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 600)) /*&& (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100))*/)
     {
         COOR_Y0 -= 2;
-        if (COOR_Y0 <= 0) COOR_Y0 = 160;
+        if (COOR_Y0 <= 0) COOR_Y0 = 0;
         return COOR_Y0;
     }
    /*else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
@@ -780,7 +810,7 @@ int Joystick::calculatePositionX0() // 0x
     if ((RAW_DATA_X0 < (DEF_RES_X0 - 600)) /*&& (RAW_DATA_X0 > (DEF_RES_X0 - 1200))*/)
     {
         COOR_X0 -= 2;
-        if (COOR_X0 <= 0) COOR_X0 = 256;
+        if (COOR_X0 <= 0) COOR_X0 = 0;
         return COOR_X0; 
 
     }
@@ -794,7 +824,7 @@ int Joystick::calculatePositionX0() // 0x
     else if ((RAW_DATA_X0 > (DEF_RES_X0 + 600)) /*&& (RAW_DATA_X0 < (DEF_RES_X0 + 1100))*/)
     {
         COOR_X0 += 2;
-        if (COOR_X0 >= 256) COOR_X0 = 0;
+        if (COOR_X0 >= 256) COOR_X0 = 256;
         return COOR_X0; 
     }
     /*else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
@@ -987,6 +1017,16 @@ void Timer::timer(void (*f)(void), int interval)
     }
 }
 
+void Timer::stopwatch(void (*f)(void), int interval)
+{
+    unsigned long currTime = millis();
+    if (currTime - prevTime >= interval)
+    {
+        prevTime = currTime;
+        f();
+    }
+}
+
 /* Powersave mode */
 /* The function checks whether the joystick or button is pressed at a certain moment */
 bool isTouched()
@@ -1008,7 +1048,7 @@ void powerSaveDeepSleep()
         screenTiming = TIMER;
     }
     
-    if (_joy.posY0 >= 150) BUFFER_STRING = "Light powersave mode";
+    if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Light powersave mode";
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
@@ -1261,13 +1301,13 @@ void systemTray()
 {
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
+    
     _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
     
-    /* IPAddress ip = WiFi.localIP();
-sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
-
+    //if (stateWifi == false) _disconnect.button("W", 120, 158, myWifiConnect, _joy.posX0, _joy.posY0);
+    
     _gfx.print(WiFi.localIP().toString(), 135, 159, 8, 5);
-
+    
     _trm0.timer(clearBufferString, 100);
 }
 
@@ -1292,27 +1332,17 @@ void systemViewList()
 /* NULL function */
 void null(){}
 
-void ff()
+void myConsole()
 {
     _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
     _joy.resetPositionXY();
 }
 
-void ff2()
+void mySerialPort()
 {
     _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
     //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
-}
-
-/* APP */
-/* Desctop */
-void desctop()
-{
-    _gfx.print("Move the cursor\nto the Pong game\nshortcut", 5, 10, 8, 5);
-    _myConsole.shortcut("My Console", icon_mytablet_bits, 5, 30, ff, _joy.posX0, _joy.posY0);
-    _myConsole.shortcut("Serial port", icon_com_port_bits, 5, 65, ff2, _joy.posX0, _joy.posY0);
-    _myConsole.shortcut("Test Application", icon_tech_info_bits, 5, 100, testApp, _joy.posX0, _joy.posY0);
 }
 
 /* TERMINAL */
@@ -1327,30 +1357,34 @@ struct App
     bool active;            //activ status task-function
     int indexTask;          //
     const uint8_t *bitMap;  //icon task-function
-    bool state;             //0-task-function any 1-Application
+    uint8_t state;          //0-task-function any 1-desctop any 2-app
 };
 
 /* enumeration of objects - commands */
 App commands[]
 {
     //system task
-    {"clearcomm", "Clear command",  clearCommandTerminal, false,     0, NULL, 0},
-    {"deepsleep", "Deep sleep PWS-mode", powerSaveDeepSleep, true,   1, NULL, 0},
-    {"rawadc",    "Raw data ADC",   systemRawADC,         false,     2, NULL, 0},
-    {"clearbuffer","Clear Buffer",  clearBufferString,    false,     3, NULL, 0},
+    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0},
+    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0},
+    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0},
+    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0},
 
+    //app-desctop
+    {"mydesctop",   "My Desctop",          myDesctop,            true,    100, NULL,                1},
     //app
-    {"desctop",   "Desctop",        desctop,              true,    100, NULL, 1},
-    {"test",      "Test",           testApp,              false,   101, NULL, 2},
+    {"myconsole",   "My Console",          myConsole,            false,   101, icon_mytablet_bits,  2},
+    {"myserialport","My Serial port",      mySerialPort,         false,   102, icon_com_port_bits,  2},
+    {"testapp",     "Test Application",    testApp,              false,   103, icon_tech_info_bits, 2},
+    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, icon_connect_bits,   2},
+    
+    
 
-    {"wifisetup", "WiFi",           wifiSetup,            true,    200, NULL, 0},
-    {"wificonect","WiFi",           wifiConnect,          true,    201, NULL, 0},
-    {"ntpsetup",  "Time NTP Setup", timeNtpSetup,         true,    202, NULL, 0},
-    {"ntptime",   "Time NTP",       timeNtpUpdate,        true,    203, NULL, 0},
+
+
 
     //system graphics-task
-    {"systray",   "Tray",           systemTray,           true,    300, NULL, 0},
-    {"syscursor", "Cursor",         systemCursor,         true,    301, NULL, 0},
+    {"systray",     "Tray",                systemTray,           true,    300, NULL, 0},
+    {"syscursor",   "Cursor",              systemCursor,         true,    301, NULL, 0},
 };
 
 /* delete all commands */
@@ -1444,63 +1478,102 @@ void Task::taskRun(int indexTask)
 /* Application */
 void Application::window(String name, int indexTask, void (*f1)(void), void (*f2)(void))
 {
-    f1;
+    _task.taskKill(100); //kill Desctop
+    _task.taskRun(indexTask);
+    
+    f1; //calc
+    f2; //graphics
     
     //draw window
     {
         _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
         u8g2.drawFrame(0, 10, 256, 141);
     }
-
+    //draw button-state-window
     {
         if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
+        
         if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
         {
             _task.taskKill(indexTask);
-            _task.taskRun(100);
+            _task.taskRun(100); //run Desctop
         }
     }
-    f2;
+}
+
+/* APP */
+/* Desctop */
+void myDesctop()
+{
+    uint8_t border{4};
+    uint8_t xx{border};
+    uint8_t yy{15}; 
+
+    uint8_t countTask{1};
+    
+    for (App &command : commands)
+    {
+        if (command.state == 2)
+        {
+            _myConsole.shortcut(command.name, command.bitMap, xx, yy, command.f, _joy.posX0, _joy.posY0);
+            countTask++;
+
+            xx += (32 + border);
+
+            if (countTask > 7) 
+            {
+                xx = 4; yy += (32 + border); countTask = 0;
+            }
+        }
+    }
+    //_gfx.print("Move the cursor to the Pong game shortcut", 5, 10, 8, 5);
 }
 
 /* TEST */
 void testApp()
 {
-    _task.taskKill(100);
-    _task.taskRun(101);
-
-    _app.window("Test Application", 101, null, null);
-    
-    /*if (_joy.pressKeyEX() == true)
-    {
-        _task.taskRun(100);
-        _task.taskKill(101);
-    }*/
+    _app.window("Test Application", 103, null, null);
 }
 
 /* WIFI */
-void wifiSetup()
+void myWifiDisconnect()
 {
-    WiFi.begin("Allowed", "Serjant1985"); commands[6].active = false;
+    WiFi.disconnect(true);
+    WiFi.mode(WIFI_OFF);
+
+    //_mess.popUpMessage("!", "Wi-Fi is disabled!\0", 2000);
+    
+    _task.taskKill(104);
+    stateWifiSetup = false; stateWifi = false;
 }
 
-void wifiConnect()
+void myWifiConnect()
 {
+    _task.taskRun(104);
+    
+    {
+        //add network selection
+    }
+
+    if (stateWifiSetup == false)
+    {
+        WiFi.begin("Allowed", "Serjant1985"); stateWifiSetup = true;
+    }
+
     if (WiFi.status() != WL_CONNECTED)
     {
-        BUFFER_STRING = "Wi-Fi..."; 
+        BUFFER_STRING = "Wi-Fi...";
+        stateWifi = false;
+        //_stop.stopwatch(myWifiDisconnect, 10000);
     }
-    else BUFFER_STRING = "Wi-Fi connected"; commands[7].active = false;
-    
-    //uint8_t ip = WiFi.localIP();
-    //disconnect WiFi as it's no longer needed
-    //WiFi.disconnect(true);
-    //WiFi.mode(WIFI_OFF);
-}
+    else
+    {
+        stateWifi = true;
+        _disconnect.button("X", 120, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
+    }
 
-void timeNtpSetup()
-{
-    commands[8].active = false;
+    /* IPAddress ip = WiFi.localIP();
+    sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
 }
 
 void timeNtpUpdate()
