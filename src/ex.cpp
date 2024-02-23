@@ -1564,7 +1564,7 @@ void myWifiConnect()
     {
         BUFFER_STRING = "Wi-Fi...";
         stateWifi = false;
-        //_stop.stopwatch(myWifiDisconnect, 10000);
+        _stop.stopwatch(myWifiDisconnect, 10000);
     }
     else
     {
