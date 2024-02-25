@@ -35,8 +35,9 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 
 /* Prototype function */
-void clearCommandTerminal(); void testApp(); void myWifiConnect(); void myWifiDisconnect(); void timeNtpSetup();
-void timeNtpUpdate(); void myDesctop();
+void clearCommandTerminal(); void testApp(); void myDesctop();
+void myWifiConnect(); void myWifiDisconnect(); 
+
 
 enum StateOs
 {
@@ -628,7 +629,8 @@ bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(v
   u8g2.setDrawColor(1);
   u8g2.setBitmapMode(0);
   u8g2.drawXBMP(x, y, 32, 32, bitMap);
-  u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
+  //u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
+  u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
 
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
@@ -648,7 +650,8 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   u8g2.setDrawColor(1);
   u8g2.setBitmapMode(0);
   u8g2.drawXBMP(x, y, 32, 32, bitMap);
-  u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
+  //u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
+  u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
 
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
@@ -1302,13 +1305,11 @@ void systemTray()
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
     
-    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
+    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);                           //text-buffer
+    _gfx.print((String)timeClient.getFormattedTime(), 211, 159, 8, 5); //time NTP
     
-    //if (stateWifi == false) _disconnect.button("W", 120, 158, myWifiConnect, _joy.posX0, _joy.posY0);
-    
-    _gfx.print(WiFi.localIP().toString(), 135, 159, 8, 5);
-    
-    _trm0.timer(clearBufferString, 100);
+  
+    _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
 
 /* System cursor */
@@ -1370,12 +1371,12 @@ App commands[]
     {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0},
 
     //app-desctop
-    {"mydesctop",   "My Desctop",          myDesctop,            true,    100, NULL,                1},
+    {"mydesctop",   "My Desctop",          myDesctop,            true,    100, NULL,                  1},
     //app
-    {"myconsole",   "My Console",          myConsole,            false,   101, icon_mytablet_bits,  2},
-    {"myserialport","My Serial port",      mySerialPort,         false,   102, icon_com_port_bits,  2},
-    {"testapp",     "Test Application",    testApp,              false,   103, icon_tech_info_bits, 2},
-    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, icon_connect_bits,   2},
+    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    2},
+    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 2},
+    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    2},
+    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 2},
     
     
 
@@ -1526,7 +1527,9 @@ void myDesctop()
             }
         }
     }
-    //_gfx.print("Move the cursor to the Pong game shortcut", 5, 10, 8, 5);
+    
+    _gfx.print("My Desctop", 5, 8, 8, 5);
+    u8g2.drawHLine(0, 10, 256);
 }
 
 /* TEST */
@@ -1569,15 +1572,12 @@ void myWifiConnect()
     else
     {
         stateWifi = true;
+        _gfx.print(WiFi.localIP().toString(), 135, 159, 8, 5);
         _disconnect.button("X", 120, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
+
+        timeClient.update();
     }
 
     /* IPAddress ip = WiFi.localIP();
     sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
-}
-
-void timeNtpUpdate()
-{
-    timeClient.update();
-    _gfx.print((String)timeClient.getFormattedTime(), 211, 159, 8, 5);
 }
