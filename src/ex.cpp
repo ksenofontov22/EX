@@ -87,8 +87,9 @@ const int8_t PIN_BUTTON_EX    = 14;  // gp
 const int8_t PIN_BUTTON_A     = 12;  // gp
 const int8_t PIN_BUTTON_B     = 13;  // gp
 
-const int8_t PIN_BACKLIGHT_LCD = 25;   // gp 
+const int8_t PIN_BACKLIGHT_LCD = 0;    // gp 
 const int8_t PIN_BUZZER = 26;          // gp 
+const int8_t PIN_BATTERY = 39;         // gp
 
 /* backlight */
 void Graphics::controlBacklight(bool state)
@@ -124,12 +125,13 @@ void Graphics::initializationSystem()
     analogReadResolution(RESOLUTION_ADC);
     //display backlight
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
-    digitalWrite(PIN_BACKLIGHT_LCD, true);
+    digitalWrite(PIN_BACKLIGHT_LCD, 1);
     //PIN mode
     pinMode(PIN_BUTTON_ENTER, INPUT);
-    pinMode(PIN_BUTTON_EX, INPUT);
-    pinMode(PIN_BUTTON_A, INPUT);
-    pinMode(PIN_BUTTON_B, INPUT);
+    pinMode(PIN_BUTTON_EX,    INPUT);
+    pinMode(PIN_BUTTON_A,     INPUT);
+    pinMode(PIN_BUTTON_B,     INPUT);
+    pinMode(PIN_BATTERY,      INPUT);
 
     //platform logo output
     image_width = windows_width;
@@ -1060,7 +1062,8 @@ void powerSaveDeepSleep()
         while (isTouched() == false)
         {
             sleepModeScreen();
-            esp_light_sleep_start();
+            _gfx.controlBacklight(false);
+            esp_light_sleep_start(); 
         }
     }
     
@@ -1070,7 +1073,9 @@ void powerSaveDeepSleep()
 
         while (isTouched() == false)
         {
+            _gfx.controlBacklight(false);
             esp_deep_sleep_start();
+
         }
     }
 }
@@ -1299,14 +1304,21 @@ void clearBufferString()
 {
     BUFFER_STRING = "";
 }
+/* Battery */
+int dataRawBattery{};
+int systemBattery()
+{
+    dataRawBattery = analogRead(PIN_BATTERY);
+    return dataRawBattery;
+}
 /* System tray */
 void systemTray()
 {
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
     
-    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);                           //text-buffer
-    _gfx.print((String)timeClient.getFormattedTime(), 211, 159, 8, 5); //time NTP
+    _gfx.print(BUFFER_STRING + " | " + (String)systemBattery(), 5, 159, 8, 5);    //text-buffer
+    _gfx.print((String)timeClient.getFormattedTime(), 211, 159, 8, 5);            //time NTP
     
   
     _trm0.timer(clearBufferString, 100); //clear text-buffer
@@ -1530,6 +1542,8 @@ void myDesctop()
     
     _gfx.print("My Desctop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
+
+    /*test led*/ _gfx.controlBacklight(true);
 }
 
 /* TEST */
