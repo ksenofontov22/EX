@@ -1309,6 +1309,8 @@ int dataRawBattery{};
 int systemBattery()
 {
     dataRawBattery = analogRead(PIN_BATTERY);
+    dataRawBattery = map(dataRawBattery, 1551, 2600, 0, 100);
+
     return dataRawBattery;
 }
 /* System tray */
@@ -1317,7 +1319,8 @@ void systemTray()
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
     
-    _gfx.print(BUFFER_STRING + " | " + (String)systemBattery(), 5, 159, 8, 5);    //text-buffer
+    //_gfx.print(BUFFER_STRING + " % " + (String)systemBattery(), 5, 159, 8, 5);    //text-buffer
+    _gfx.print((String)systemBattery() + " " + BUFFER_STRING, 5, 159, 8, 5);
     _gfx.print((String)timeClient.getFormattedTime(), 211, 159, 8, 5);            //time NTP
     
   
