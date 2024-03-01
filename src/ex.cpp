@@ -30,8 +30,9 @@ Shortcut _myConsole, _wifi;
 Cursor _crs; 
 PowerSave _pwsDeep; 
 Interface _mess; 
-Button _ok, _no, _collapse, _expand, _close, _disconnect, _battery, _clock;
+Button _ok, _no, _collapse, _expand, _close, _disconnect;
 TimeNTP _timentp; Task _task;
+Label _label1;
 
 /* WIFI */
 bool stateWifiSetup = false;
@@ -76,7 +77,7 @@ unsigned long previousMillis{};
 unsigned long prevTime_0{};
 const long interval{300};
 
-/* graphics chip setup */
+/* Graphics chip setup */
 U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/5, /* dc=*/17, /* reset=*/16);
 
 /* Liquid crystal display resolution. */
@@ -96,10 +97,10 @@ const int8_t PIN_BUTTON_A     = 12;  // gp
 const int8_t PIN_BUTTON_B     = 13;  // gp
 
 const int8_t PIN_BACKLIGHT_LCD = 0;    // gp 
-const int8_t PIN_BUZZER = 26;          // gp 
+const int8_t PIN_BUZZER  = 26;         // gp 
 const int8_t PIN_BATTERY = 39;         // gp
 
-/* backlight */
+/* Backlight */
 void Graphics::controlBacklight(bool state) //p-n-p transistor
 {
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
@@ -114,7 +115,7 @@ void Graphics::controlBacklight(bool state) //p-n-p transistor
     }
 }
 
-/* graphics */
+/* Graphics */
 /* graphics output objects */
 void Graphics::initializationSystem()
 {
@@ -154,7 +155,6 @@ void Graphics::initializationSystem()
     //--
     delay(2500);
 }
-
 /* data render (full frame) */
 void Graphics::render(void (*f)(), int timeDelay)
 {
@@ -184,7 +184,6 @@ void Graphics::render(void (*f1)(), void (*f2)())
       f2();
       u8g2.sendBuffer();
 }
-
 /* clearing the output buffer */
 void Graphics::clear()
 {
@@ -192,7 +191,7 @@ void Graphics::clear()
     u8g2.sendBuffer();
 }
 
-/* print */
+/* Print */
 /* text output with parameters, add size font, add line interval (def: 10) and character interval (def: 6) */
 void Graphics::print(int8_t sizeFont, String text, int x, int y, int8_t lii, int8_t chi) // text, x-position, y-position, line interval (8-10), character interval (4-6)
 {
@@ -221,7 +220,6 @@ void Graphics::print(int8_t sizeFont, String text, int x, int y, int8_t lii, int
         }
     }
 }
-
 /* text output with parameters, add line interval (def: 10) and character interval (def: 6) */
 void Graphics::print(String text, int x, int y, int8_t lii, int8_t chi) // text, x-position, y-position, line interval (8-10), character interval (4-6)
 {
@@ -242,7 +240,6 @@ void Graphics::print(String text, int x, int y, int8_t lii, int8_t chi) // text,
         }
     }
 }
-
 /* text output with parameters */
 void Graphics::print(String text, int x, int y) // text, x-position, y-position, line interval (8-10), character interval (4-6)
 {
@@ -264,7 +261,6 @@ void Graphics::print(String text, int x, int y) // text, x-position, y-position,
         }
     }
 }
-
 /* "wink text" output  */
 bool Graphics::winkPrint(void (*f)(String, int, int), String text, int x, int y, int interval)
 {
@@ -281,6 +277,7 @@ bool Graphics::winkPrint(void (*f)(String, int, int), String text, int x, int y,
     }
 }
 
+/* Cursor */
 /* displaying the cursor on the screen */
 bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 {
@@ -297,6 +294,8 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
         return false;
 }
 
+/* Interface */
+/* displaying a message to the user */
 void Interface::message(String text, int duration)
 {
     uint8_t x{10}, y{34};
@@ -334,7 +333,7 @@ void Interface::message(String text, int duration)
 
     delay(duration);
 }
-
+/* displaying a message to the user */
 void Interface::popUpMessage(String label, String text, uint tDelay)
 {
     uint8_t sizeText = text.length();
@@ -389,7 +388,7 @@ void Interface::popUpMessage(String label, String text, uint tDelay)
         Serial.println(text[i], BIN);
     }*/
 }
-
+/* displaying a message to the user */
 void Interface::popUpMessage(String label1, String label2, String text, uint tDelay)
 {
     uint8_t sizeText = text.length();
@@ -446,7 +445,7 @@ void Interface::popUpMessage(String label1, String label2, String text, uint tDe
         Serial.println(text[i], BIN);
     }*/
 }
-
+/* displaying a message to the user */
 void Interface::popUpMessage(String label, String text)
 {
     uint8_t sizeText = text.length();
@@ -497,9 +496,9 @@ void Interface::popUpMessage(String label, String text)
 
     //Serial.println(max); Serial.println(countChar);
 }
-
+/* displaying the dialog to the user */
 bool Interface::dialogueMessage(String label, String text, void (*f1)(), void (*f2)()){}
-
+/* displaying the dialog to the user */
 bool Interface::dialogueMessage(String label, String text)
 {
     while (true)
@@ -571,7 +570,7 @@ bool Interface::dialogueMessage(String label, String text)
     }
 }
 
-/* BUTTON */
+/* Button */
 /* Button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
@@ -634,7 +633,8 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   return false;
 }
 
-/* shortcut */
+/* Shortcut */
+/* displaying a shortcut to a task-function */
 bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
   u8g2.setDrawColor(1);
@@ -655,7 +655,7 @@ bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(v
 
   return false;
 }
-
+/* displaying a shortcut to a task-function */
 bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
   u8g2.setDrawColor(1);
@@ -683,7 +683,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
 
   return false;
 }
-
+/* displaying a shortcut to a task-function */
 bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
     u8g2.setDrawColor(1);
@@ -710,8 +710,80 @@ bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8
     return false;
 }
 
+/* Label */
+bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor)
+{
+    /*u8g2.setDrawColor(1);
+    u8g2.setBitmapMode(0);
+
+    uint8_t w{},h{}; 
+
+    uint8_t sizeText = text.length();
+    w = sizeText * chi;
+    h = lii;
+
+    _gfx.print(text, x, y, lii, chi);
+
+    if ((xCursor >= x && xCursor <= (x + w)) && (yCursor >= y && yCursor <= (y + h)))
+    {
+        u8g2.drawFrame(x, y, w, h);
+
+        BUFFER_STRING = text;
+
+        if (Joystick::pressKeyENTER() == true)
+        {
+            f();
+            return true;
+        }
+    }
+    else
+    {
+    }*/
+
+    uint8_t sizeText = text.length();
+    uint8_t yy{};
+
+    if ((xCursor >= x && xCursor <= (x + (sizeText * chi))) && (yCursor >= y - (lii + 2) && yCursor <= y + 2))
+    {
+        u8g2.setDrawColor(1);
+        u8g2.drawBox(x, y - (lii + 2), (sizeText * chi), lii + 2);
+
+        BUFFER_STRING = text;
+
+        if (Joystick::pressKeyENTER() == true)
+        {
+            return true;
+        }
+    }
+    else
+    {
+        u8g2.setDrawColor(1);
+    }
+
+    u8g2.setCursor(x + 3, y);
+    u8g2.setFont(u8g2_font_6x10_tr);
+    u8g2.setFontMode(1);
+    u8g2.setDrawColor(2);
+    
+    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
+    {
+        u8g2.setCursor(xx + x, yy + y);
+        u8g2.print(text[i]);
+
+        if (text[i] == '\n')
+        {
+            yy += lii; // 10
+            xx = -chi; // 6
+        }
+    }
+
+    u8g2.setFontMode(0);
+
+    return false;
+}
+
 /* Joystic */
-/* system button control */
+/* button control */
 bool Joystick::pressKeyENTER()
 {
     if (digitalRead(PIN_BUTTON_ENTER) == true)
@@ -721,7 +793,7 @@ bool Joystick::pressKeyENTER()
     else
         return false;
 }
-
+/* button control */
 bool Joystick::pressKeyEX()
 {
     if (digitalRead(PIN_BUTTON_EX) == true)
@@ -731,7 +803,7 @@ bool Joystick::pressKeyEX()
     else
         return false;
 }
-
+/* button control */
 bool Joystick::pressKeyA()
 {
     if (digitalRead(PIN_BUTTON_A) == true)
@@ -741,7 +813,7 @@ bool Joystick::pressKeyA()
     else
         return false;
 }
-
+/* button control */
 bool Joystick::pressKeyB()
 {
     if (digitalRead(PIN_BUTTON_B) == true)
@@ -751,7 +823,6 @@ bool Joystick::pressKeyB()
     else
         return false;
 }
-
 /* calculate Stick position */
 int Joystick::calculatePositionY0() // 0y
 {
@@ -784,7 +855,7 @@ int Joystick::calculatePositionY0() // 0y
     else
         return COOR_Y0;
 }
-
+/* calculate Stick position */
 int Joystick::calculatePositionY1() // 1y
 {
     RAW_DATA_Y1 = analogRead(PIN_STICK_1Y);
@@ -816,7 +887,7 @@ int Joystick::calculatePositionY1() // 1y
     else
         return COOR_Y1;
 }
-
+/* calculate Stick position */
 int Joystick::calculatePositionX0() // 0x
 {
     RAW_DATA_X0 = analogRead(PIN_STICK_0X);
@@ -850,7 +921,7 @@ int Joystick::calculatePositionX0() // 0x
     else
         return COOR_X0;
 }
-
+/* calculate Stick position */
 int Joystick::calculatePositionX1() // 1x
 {
     RAW_DATA_X1 = analogRead(PIN_STICK_1X);
@@ -882,8 +953,7 @@ int Joystick::calculatePositionX1() // 1x
     else
         return COOR_X1;
 }
-
-/* Updating Stick coordinates */
+/* updating Stick coordinates */
 void Joystick::updatePositionXY()
 {
     posX0 = calculatePositionX0(); //
@@ -896,14 +966,12 @@ void Joystick::updatePositionXY()
     indexY0 = calculateIndexY0();
     indexY1 = calculateIndexY1();
 }
-
-/* */
+/* resetting the cursor position */
 void Joystick::resetPositionXY()
 {
     COOR_X0 = 128; COOR_X1 = 128; COOR_Y0 = 80; COOR_Y1 = 80;
 }
-
-/* Updating Stick coordinates */
+/* updating Stick coordinates */
 void Joystick::updatePositionXY(uint delay)
 {
     unsigned long currTime = millis();
@@ -922,8 +990,7 @@ void Joystick::updatePositionXY(uint delay)
         indexY1 = calculateIndexY1();
     }
 }
-
-/* Calculate position index */
+/* calculate position index */
 int8_t Joystick::calculateIndexY0() // obj 0y
 {
     RAW_DATA_Y0 = analogRead(PIN_STICK_0Y);
@@ -947,7 +1014,7 @@ int8_t Joystick::calculateIndexY0() // obj 0y
     else
         return OBJ_Y0 = 0;
 }
-
+/* calculate position index */
 int8_t Joystick::calculateIndexY1() // obj 1y
 {
     RAW_DATA_Y1 = analogRead(PIN_STICK_1Y);
@@ -971,7 +1038,7 @@ int8_t Joystick::calculateIndexY1() // obj 1y
     else
         return OBJ_Y1 = 0;
 }
-
+/* calculate position index */
 int8_t Joystick::calculateIndexX0() // obj 0x
 {
     RAW_DATA_X0 = analogRead(PIN_STICK_0X);
@@ -995,7 +1062,7 @@ int8_t Joystick::calculateIndexX0() // obj 0x
     else
         return OBJ_X0 = 0;
 }
-
+/* calculate position index */
 int8_t Joystick::calculateIndexX1() // obj 1x
 {
     RAW_DATA_X1 = analogRead(PIN_STICK_1X);
@@ -1021,6 +1088,7 @@ int8_t Joystick::calculateIndexX1() // obj 1x
 }
 
 /* Timer */
+/* starting a task-function with an interval */
 void Timer::timer(void (*f)(void), int interval)
 {
     unsigned long currTime = millis();
@@ -1030,7 +1098,7 @@ void Timer::timer(void (*f)(void), int interval)
         f();
     }
 }
-
+/* ---> remove support */
 void Timer::stopwatch(void (*f)(void), int interval)
 {
     unsigned long currTime = millis();
@@ -1042,19 +1110,19 @@ void Timer::stopwatch(void (*f)(void), int interval)
 }
 
 /* Powersave mode */
-/* The function checks whether the joystick or button is pressed at a certain moment */
+/* the function checks whether the joystick or button is pressed at a certain moment */
 bool isTouched()
 {
   if ((_joy.calculateIndexY0() == 0) && (_joy.calculateIndexX0() == 0)) return false;
 
   return true;
 }
-/* Shows a notification about the start of sleep mode */
+/* shows a notification about the start of sleep mode */
 void sleepModeScreen()
 {
     _mess.popUpMessage("PwSM", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
 }
-/* */
+/* a system-task for working in an energy-efficient mode */
 void powerSaveDeepSleep()
 {
     if (isTouched() == true)
@@ -1088,9 +1156,9 @@ void powerSaveDeepSleep()
         }
     }
 }
-/* Turns off the backlight and turns on an infinite loop
+/* turns off the backlight and turns on an infinite loop
    with the text to pause until the joysticks are pressed or moved */
-/* Light sleep */
+/* ---> remove support */
 void PowerSave::sleepLight(bool state, uint timeUntil)
 {
   if ((state == true))
@@ -1118,7 +1186,7 @@ void PowerSave::sleepLight(bool state, uint timeUntil)
     }
   }
 }
-/* Deep sleep */
+/* ---> remove support */
 void PowerSave::sleepDeep(bool state, uint timeUntil)
 {
   if ((state == true))
@@ -1148,6 +1216,7 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
 }
 
 /* Song engine */
+/* playing a melody */
 void songEngine(uint arr[][2], uint noteCount)
 {
   for (uint i = 0; i < noteCount; i++)
@@ -1157,7 +1226,7 @@ void songEngine(uint arr[][2], uint noteCount)
     noTone(PIN_BUZZER);
   }
 }
-/*  */
+/* list melody */
 void Melody::songCore()
 {
     switch (lM)
@@ -1230,7 +1299,7 @@ void Melody::songCore()
         break;
     }
 }
-/*  */
+/* list melody */
 void Melody::song(listMelody num)
 {
     switch (num)
@@ -1308,21 +1377,22 @@ void Melody::song(listMelody num)
     }
 }
 
-/* TASK-FUNCTION */
+/* System task-function */
+/* task-function. clear buffer */
 void clearBufferString()
 {
     BUFFER_STRING = "";
 }
-/* Battery */
+/* task-function. calculation of battery capacity */
 int dataRawBattery{};
 int systemBattery()
 {
     dataRawBattery = analogRead(PIN_BATTERY);
-    dataRawBattery = map(dataRawBattery, 1551, 2600, 0, 100);
+    dataRawBattery = map(dataRawBattery, 1551, 2481, 0, 100);
 
     return dataRawBattery;
 }
-/* System tray */
+/* task-function. system tray output */
 void systemTray()
 {
     u8g2.setDrawColor(1);
@@ -1333,34 +1403,30 @@ void systemTray()
   
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
-
-/* System cursor */
+/* task-function. system cursor output */
 void systemCursor()
 {
     _joy.updatePositionXY(25);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
-/* System RawADC */
+/* task-function. system RawADC */
 void systemRawADC()
 {
     String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + "Coord Y: " + (String)_joy.RAW_DATA_Y0;
     BUFFER_STRING = text; 
 }
-/* System viewList */
+/* task-function. displaying a list of tasks */
 void systemViewList()
 {
 
 }
-
-/* NULL function */
-void null(){}
-
+/* task-function. stack, task, command */
 void myConsole()
 {
     _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
     _joy.resetPositionXY();
 }
-
+/* task-function. serial port operation control */
 void mySerialPort()
 {
     _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
@@ -1368,7 +1434,10 @@ void mySerialPort()
     _joy.resetPositionXY();
 }
 
-/* TERMINAL */
+/* NULL function */
+void null(){}
+
+/* Terminal */
 /* command type */
 struct App
 {
@@ -1382,7 +1451,6 @@ struct App
     const uint8_t *bitMap;  //icon task-function
     uint8_t state;          //0-task-function any 1-desctop any 2-app
 };
-
 /* enumeration of objects - commands */
 App commands[]
 {
@@ -1409,7 +1477,6 @@ App commands[]
     {"systray",     "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",   "Cursor",              systemCursor,         true,    301, NULL, 0},
 };
-
 /* delete all commands */
 void clearCommandTerminal()
 {
@@ -1418,7 +1485,6 @@ void clearCommandTerminal()
     command.active = false;
   }
 }
-
 /* command stack */
 void calcTerminal()
 {
@@ -1430,7 +1496,6 @@ void calcTerminal()
     }
   }
 }
-
 /* pushing data onto the stack */
 void Terminal::terminal()
 {
@@ -1452,7 +1517,7 @@ void Terminal::terminal()
     }
   }
 }
-
+/* pushing data onto the stack and User task-function */
 void Terminal::terminal(void(*f)())
 {
   TIMER = millis();
@@ -1475,7 +1540,8 @@ void Terminal::terminal(void(*f)())
   }
 }
 
-/* TASK */
+/* Task management */
+/* disable a task */
 void Task::taskKill(int indexTask)
 {
     for (App &command : commands)
@@ -1486,7 +1552,7 @@ void Task::taskKill(int indexTask)
         }
     }
 }
-
+/* start a task */
 void Task::taskRun(int indexTask)
 {
     for (App &command : commands)
@@ -1499,6 +1565,7 @@ void Task::taskRun(int indexTask)
 }
 
 /* Application */
+/* window designer for the task-function */
 void Application::window(String name, int indexTask, void (*f1)(void), void (*f2)(void))
 {
     _task.taskKill(100); //kill Desctop
@@ -1524,8 +1591,8 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
     }
 }
 
-/* APP */
-/* Desctop */
+/* App */
+/* desctop */
 void myDesctop()
 {
     uint8_t border{4};
@@ -1553,16 +1620,16 @@ void myDesctop()
     _gfx.print("My Desctop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
 
+    _label1.label("Hello world", 5, 90, null, 8, 5, _joy.posX0, _joy.posY0);
+
     /*test led*/ _gfx.controlBacklight(true);
 }
-
-/* TEST */
+/* test */
 void testApp()
 {
     _app.window("Test Application", 103, null, null);
 }
-
-/* WIFI */
+/* wi-fi */
 void myWifiDisconnect()
 {
     WiFi.disconnect(true);
@@ -1573,7 +1640,7 @@ void myWifiDisconnect()
     _task.taskKill(104);
     stateWifiSetup = false; stateWifi = false;
 }
-
+/* wi-fi */
 void myWifiConnect()
 {
     _task.taskRun(104);

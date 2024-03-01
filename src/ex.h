@@ -161,6 +161,14 @@ public:
 
 };
 
+class Label : Joystick
+{
+private:
+public:
+    /* Label */
+    bool label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor);
+};
+
 class Cursor
 {
 private:
