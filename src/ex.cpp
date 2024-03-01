@@ -22,8 +22,15 @@
 //version library
 const int8_t VERSION_LIB[] = {1, 0};
 
-Graphics _gfx; Timer _delayCursor, _trm0, _trm1, _stop; Application _app; Joystick _joy; Shortcut _myConsole, _wifi;
-Cursor _crs; PowerSave _pwsDeep; Interface _mess; Button _ok, _no, _collapse, _expand, _close, _disconnect;
+Graphics _gfx; 
+Timer _delayCursor, _trm0, _trm1, _stop; 
+Application _app; 
+Joystick _joy; 
+Shortcut _myConsole, _wifi;
+Cursor _crs; 
+PowerSave _pwsDeep; 
+Interface _mess; 
+Button _ok, _no, _collapse, _expand, _close, _disconnect, _battery, _clock;
 TimeNTP _timentp; Task _task;
 
 /* WIFI */
@@ -35,6 +42,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 
 /* Prototype function */
+void null();
 void clearCommandTerminal(); void testApp(); void myDesctop();
 void myWifiConnect(); void myWifiDisconnect(); 
 
@@ -92,17 +100,17 @@ const int8_t PIN_BUZZER = 26;          // gp
 const int8_t PIN_BATTERY = 39;         // gp
 
 /* backlight */
-void Graphics::controlBacklight(bool state)
+void Graphics::controlBacklight(bool state) //p-n-p transistor
 {
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
 
     if (state == true)
     {
-        digitalWrite(PIN_BACKLIGHT_LCD, 1); // on
+        digitalWrite(PIN_BACKLIGHT_LCD, 0); // on
     }
     else
     {
-        digitalWrite(PIN_BACKLIGHT_LCD, 0); // off
+        digitalWrite(PIN_BACKLIGHT_LCD, 1); // off
     }
 }
 
@@ -125,7 +133,8 @@ void Graphics::initializationSystem()
     analogReadResolution(RESOLUTION_ADC);
     //display backlight
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
-    digitalWrite(PIN_BACKLIGHT_LCD, 1);
+    //digitalWrite(PIN_BACKLIGHT_LCD, 1);
+    _gfx.controlBacklight(true);
     //PIN mode
     pinMode(PIN_BUTTON_ENTER, INPUT);
     pinMode(PIN_BUTTON_EX,    INPUT);
@@ -1319,10 +1328,8 @@ void systemTray()
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
     
-    //_gfx.print(BUFFER_STRING + " % " + (String)systemBattery(), 5, 159, 8, 5);    //text-buffer
-    _gfx.print((String)systemBattery() + " " + BUFFER_STRING, 5, 159, 8, 5);
-    _gfx.print((String)timeClient.getFormattedTime(), 211, 159, 8, 5);            //time NTP
-    
+    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
+    _gfx.print((String)systemBattery() +  + " " + (String)timeClient.getFormattedTime(), 196, 159, 8, 5);            //time NTP
   
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
@@ -1589,8 +1596,8 @@ void myWifiConnect()
     else
     {
         stateWifi = true;
-        _gfx.print(WiFi.localIP().toString(), 135, 159, 8, 5);
-        _disconnect.button("X", 120, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
+        _gfx.print(WiFi.localIP().toString(), 130, 159, 8, 5);
+        _disconnect.button("X", 115, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
 
         timeClient.update();
     }
