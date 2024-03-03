@@ -23,7 +23,7 @@
 const int8_t VERSION_LIB[] = {1, 0};
 
 Graphics _gfx; 
-Timer _delayCursor, _trm0, _trm1, _stop; 
+Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock; 
 Application _app; 
 Joystick _joy; 
 Shortcut _myConsole, _wifi;
@@ -32,7 +32,7 @@ PowerSave _pwsDeep;
 Interface _mess; 
 Button _ok, _no, _collapse, _expand, _close, _disconnect;
 TimeNTP _timentp; Task _task;
-Label _label1;
+Label _labelClock, _labelBattery;
 
 /* WIFI */
 bool stateWifiSetup = false;
@@ -711,6 +711,7 @@ bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8
 }
 
 /* Label */
+/*  */
 bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor)
 {
     /*u8g2.setDrawColor(1);
@@ -746,9 +747,53 @@ bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t li
     if ((xCursor >= x && xCursor <= (x + (sizeText * chi))) && (yCursor >= y - (lii + 2) && yCursor <= y + 2))
     {
         u8g2.setDrawColor(1);
-        u8g2.drawBox(x, y - (lii + 2), (sizeText * chi), lii + 2);
+        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
 
         BUFFER_STRING = text;
+
+        if (Joystick::pressKeyENTER() == true)
+        {
+            return true;
+        }
+    }
+    else
+    {
+        u8g2.setDrawColor(1);
+    }
+
+    u8g2.setCursor(x + 3, y);
+    u8g2.setFont(u8g2_font_6x10_tr);
+    u8g2.setFontMode(1);
+    u8g2.setDrawColor(2);
+    
+    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
+    {
+        u8g2.setCursor(xx + x, yy + y);
+        u8g2.print(text[i]);
+
+        if (text[i] == '\n')
+        {
+            yy += lii; // 10
+            xx = -chi; // 6
+        }
+    }
+
+    u8g2.setFontMode(0);
+
+    return false;
+}
+/*  */
+bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor)
+{
+    uint8_t sizeText = text.length();
+    uint8_t yy{};
+
+    if ((xCursor >= x && xCursor <= (x + (sizeText * chi))) && (yCursor >= y - (lii + 2) && yCursor <= y + 2))
+    {
+        u8g2.setDrawColor(1);
+        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
+
+        BUFFER_STRING = description;
 
         if (Joystick::pressKeyENTER() == true)
         {
@@ -1098,6 +1143,16 @@ void Timer::timer(void (*f)(void), int interval)
         f();
     }
 }
+/* starting a task-function with an interval */
+void Timer::timer(int (*f)(void), int interval)
+{
+    unsigned long currTime = millis();
+    if (currTime - prevTime >= interval)
+    {
+        prevTime = currTime;
+        f();
+    }
+}
 /* ---> remove support */
 void Timer::stopwatch(void (*f)(void), int interval)
 {
@@ -1385,10 +1440,24 @@ void clearBufferString()
 }
 /* task-function. calculation of battery capacity */
 int dataRawBattery{};
-int systemBattery()
+int systemUpdateBattery()
 {
     dataRawBattery = analogRead(PIN_BATTERY);
     dataRawBattery = map(dataRawBattery, 1551, 2481, 0, 100);
+
+    return dataRawBattery;
+}
+/* update NTP time */
+void systemNTPTimeUpdate()
+{
+    timeClient.update();
+}
+/* task-function. */
+int _t{};
+int systemBattery()
+{
+    if (_t >= 30000) _t = 30000;
+    _timerUpdateClock.timer(systemUpdateBattery, _t); _t += 10000;
 
     return dataRawBattery;
 }
@@ -1399,7 +1468,11 @@ void systemTray()
     u8g2.drawHLine(0, 150, 256);
     
     _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
-    _gfx.print((String)systemBattery() +  + " " + (String)timeClient.getFormattedTime(), 196, 159, 8, 5);            //time NTP
+    _labelBattery.label((String)systemBattery(), "Battery info", 196, 159, null, 8, 5, _joy.posX0, _joy.posY0);
+    _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", 211, 159, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
+
+    //_gfx.print((String)systemBattery() +  + " " + (String)timeClient.getFormattedTime(), 196, 159, 8, 5);
+
   
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
@@ -1620,7 +1693,7 @@ void myDesctop()
     _gfx.print("My Desctop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
 
-    _label1.label("Hello world", 5, 90, null, 8, 5, _joy.posX0, _joy.posY0);
+    
 
     /*test led*/ _gfx.controlBacklight(true);
 }
@@ -1665,8 +1738,6 @@ void myWifiConnect()
         stateWifi = true;
         _gfx.print(WiFi.localIP().toString(), 130, 159, 8, 5);
         _disconnect.button("X", 115, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
-
-        timeClient.update();
     }
 
     /* IPAddress ip = WiFi.localIP();

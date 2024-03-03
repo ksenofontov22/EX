@@ -114,6 +114,7 @@ private:
 public:
     /* Starting a void-function on a interval-timer. */
     void timer(void (*f)(void), int interval);
+    void timer(int (*f)(void), int interval);
     void stopwatch(void (*f)(void), int interval);
 };
 
@@ -167,6 +168,7 @@ private:
 public:
     /* Label */
     bool label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor);
+    bool label(String text, String description, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor);
 };
 
 class Cursor
