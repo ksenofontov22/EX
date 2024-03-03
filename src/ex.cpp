@@ -1456,7 +1456,11 @@ int systemUpdateBattery()
 /* update NTP time */
 void systemNTPTimeUpdate()
 {
-    timeClient.update();
+    if (WiFi.status() == WL_CONNECTED)
+    {
+        timeClient.update();
+    }
+    else _mess.popUpMessage("!", "The Wi-Fi (internet) connection\nis not active.", 2500);
 }
 /* task-function. */
 int _t{};
@@ -1474,10 +1478,9 @@ void systemTray()
     u8g2.drawHLine(0, 150, 256);
     
     _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
-    _labelBattery.label((String)systemBattery(), "Battery info", 196, 159, null, 8, 5, _joy.posX0, _joy.posY0);
+    //_labelBattery.label((String)systemBattery(), "Battery info", 196, 159, null, 8, 5, _joy.posX0, _joy.posY0);
     _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", 211, 159, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
-
-    //_gfx.print((String)systemBattery() +  + " " + (String)timeClient.getFormattedTime(), 196, 159, 8, 5);
+    _gfx.print((String)systemBattery(), 196, 159, 8, 5);
 
   
     _trm0.timer(clearBufferString, 100); //clear text-buffer
