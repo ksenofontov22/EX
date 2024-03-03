@@ -32,11 +32,14 @@ PowerSave _pwsDeep;
 Interface _mess; 
 Button _ok, _no, _collapse, _expand, _close, _disconnect;
 TimeNTP _timentp; Task _task;
-Label _labelClock, _labelBattery;
+Label _labelClock, _labelBattery, _labelWifi;
 
 /* WIFI */
 bool stateWifiSetup = false;
 bool stateWifi = false;
+
+/* LED control */
+bool systemStateLedControl = true;
 
 /* Time NTP*/
 WiFiUDP ntpUDP;
@@ -101,17 +104,19 @@ const int8_t PIN_BUZZER  = 26;         // gp
 const int8_t PIN_BATTERY = 39;         // gp
 
 /* Backlight */
-void Graphics::controlBacklight(bool state) //p-n-p transistor
+bool Graphics::controlBacklight(bool state) //p-n-p transistor
 {
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
 
     if (state == true)
     {
         digitalWrite(PIN_BACKLIGHT_LCD, 0); // on
+        return true;
     }
     else
     {
         digitalWrite(PIN_BACKLIGHT_LCD, 1); // off
+        return false;
     }
 }
 
@@ -134,8 +139,7 @@ void Graphics::initializationSystem()
     analogReadResolution(RESOLUTION_ADC);
     //display backlight
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
-    //digitalWrite(PIN_BACKLIGHT_LCD, 1);
-    _gfx.controlBacklight(true);
+    //_gfx.controlBacklight(true);
     //PIN mode
     pinMode(PIN_BUTTON_ENTER, INPUT);
     pinMode(PIN_BUTTON_EX,    INPUT);
@@ -753,6 +757,7 @@ bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t li
 
         if (Joystick::pressKeyENTER() == true)
         {
+            f();
             return true;
         }
     }
@@ -797,6 +802,7 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
         if (Joystick::pressKeyENTER() == true)
         {
+            f();
             return true;
         }
     }
@@ -1443,7 +1449,7 @@ int dataRawBattery{};
 int systemUpdateBattery()
 {
     dataRawBattery = analogRead(PIN_BATTERY);
-    dataRawBattery = map(dataRawBattery, 1551, 2481, 0, 100);
+    dataRawBattery = map(dataRawBattery, 1861, 2481, 0, 100);
 
     return dataRawBattery;
 }
@@ -1506,6 +1512,22 @@ void mySerialPort()
     //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
+/* task-function. LED control */
+bool systemLedControl()
+{
+    if (systemStateLedControl == true)
+    {
+        _gfx.controlBacklight(true);
+        return true;
+    }
+    else
+    {
+        _gfx.controlBacklight(false);
+        return false;
+    }
+
+    //_gfx.controlBacklight(true); return true;
+}
 
 /* NULL function */
 void null(){}
@@ -1549,6 +1571,7 @@ App commands[]
     //system graphics-task
     {"systray",     "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",   "Cursor",              systemCursor,         true,    301, NULL, 0},
+    {"ledcontrol",  "Led control",         systemCursor,         true,    302, NULL, 0},
 };
 /* delete all commands */
 void clearCommandTerminal()
@@ -1736,8 +1759,9 @@ void myWifiConnect()
     else
     {
         stateWifi = true;
-        _gfx.print(WiFi.localIP().toString(), 130, 159, 8, 5);
-        _disconnect.button("X", 115, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
+        _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", 130, 159, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
+        //_gfx.print(WiFi.localIP().toString(), 130, 159, 8, 5);
+        //_disconnect.button("X", 115, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
     }
 
     /* IPAddress ip = WiFi.localIP();

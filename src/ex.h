@@ -77,7 +77,7 @@ private:
     int image_width{}, image_height{};
 public:
     /* Turn on the backlight of the LCD screen. 1 enabled, 0 disabled. */
-    void controlBacklight(bool state);
+    bool controlBacklight(bool state);
 
     /* Initial display setting. Sets Contrast to 0, analog DC at 12, sets port 8 to 1 */
     void initializationSystem();
