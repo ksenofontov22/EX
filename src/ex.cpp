@@ -1485,7 +1485,7 @@ void systemTray()
 /* task-function. system cursor output */
 void systemCursor()
 {
-    _joy.updatePositionXY(25);
+    _joy.updatePositionXY(20);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
 /* task-function. system RawADC */
@@ -1511,22 +1511,6 @@ void mySerialPort()
     _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
     //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
-}
-/* task-function. LED control */
-bool systemLedControl()
-{
-    if (systemStateLedControl == true)
-    {
-        _gfx.controlBacklight(true);
-        return true;
-    }
-    else
-    {
-        _gfx.controlBacklight(false);
-        return false;
-    }
-
-    //_gfx.controlBacklight(true); return true;
 }
 
 /* NULL function */
@@ -1565,13 +1549,9 @@ App commands[]
     
     
 
-
-
-
     //system graphics-task
     {"systray",     "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",   "Cursor",              systemCursor,         true,    301, NULL, 0},
-    //{"ledcontrol",  "Led control",         systemCursor,         true,    302, NULL, 0},
 };
 /* delete all commands */
 void clearCommandTerminal()
