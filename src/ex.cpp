@@ -1571,7 +1571,7 @@ App commands[]
     //system graphics-task
     {"systray",     "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",   "Cursor",              systemCursor,         true,    301, NULL, 0},
-    {"ledcontrol",  "Led control",         systemCursor,         true,    302, NULL, 0},
+    //{"ledcontrol",  "Led control",         systemCursor,         true,    302, NULL, 0},
 };
 /* delete all commands */
 void clearCommandTerminal()
