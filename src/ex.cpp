@@ -1515,6 +1515,23 @@ void mySerialPort()
     //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
+/* task-function. system LED control */
+bool flagStateLedControl = true;
+
+void flagLedControl()
+{
+    if (flagStateLedControl == true) flagStateLedControl = false;
+    if (flagStateLedControl == false) flagStateLedControl = true; 
+}
+
+void sustemLedControl()
+{
+
+    _ledControl.button("LED", 5, 100, flagLedControl, _joy.posX0, _joy.posY0);
+    
+    if (flagStateLedControl == true) _gfx.controlBacklight(true);
+    else _gfx.controlBacklight(false);
+}
 
 /* NULL function */
 void null(){}
@@ -1553,7 +1570,7 @@ App commands[]
     
 
     //system graphics-task
-    {"sysledcontrol", "LED control",         NULL,                 false,   299, NULL, 0},
+    {"sysledcontrol", "LED control",         sustemLedControl,     false,    299, NULL, 0},
     {"systray",       "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",     "Cursor",              systemCursor,         true,    301, NULL, 0},
 };
