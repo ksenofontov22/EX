@@ -1477,7 +1477,7 @@ void systemTray()
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
     
-    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
+    _gfx.print(BUFFER_STRING, 25, 159, 8, 5);
     //_labelBattery.label((String)systemBattery(), "Battery info", 196, 159, null, 8, 5, _joy.posX0, _joy.posY0);
     _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", 211, 159, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
     _gfx.print((String)systemBattery(), 196, 159, 8, 5);
@@ -1520,14 +1520,21 @@ bool flagStateLedControl = true;
 
 void flagLedControl()
 {
-    if (flagStateLedControl == true) flagStateLedControl = false;
-    if (flagStateLedControl == false) flagStateLedControl = true; 
+    for (int i = 0; i < 1; i++)
+    {
+        if (flagStateLedControl == true)
+        {
+            flagStateLedControl = false; delay(250); break;
+        }
+        else
+            flagStateLedControl = true; delay(250);
+    }
 }
 
 void sustemLedControl()
 {
 
-    _ledControl.button("LED", 5, 100, flagLedControl, _joy.posX0, _joy.posY0);
+    _ledControl.button("LED", 0, 158, flagLedControl, _joy.posX0, _joy.posY0);
     
     if (flagStateLedControl == true) _gfx.controlBacklight(true);
     else _gfx.controlBacklight(false);
@@ -1570,7 +1577,7 @@ App commands[]
     
 
     //system graphics-task
-    {"sysledcontrol", "LED control",         sustemLedControl,     false,    299, NULL, 0},
+    {"sysledcontrol", "LED control",         sustemLedControl,     true,    299, NULL, 0},
     {"systray",       "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",     "Cursor",              systemCursor,         true,    301, NULL, 0},
 };
