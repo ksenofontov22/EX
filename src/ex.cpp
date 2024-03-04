@@ -30,7 +30,7 @@ Shortcut _myConsole, _wifi;
 Cursor _crs; 
 PowerSave _pwsDeep; 
 Interface _mess; 
-Button _ok, _no, _collapse, _expand, _close, _disconnect;
+Button _ok, _no, _collapse, _expand, _close, _ledControl;
 TimeNTP _timentp; Task _task;
 Label _labelClock, _labelBattery, _labelWifi;
 
@@ -1482,7 +1482,7 @@ void systemTray()
     _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", 211, 159, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
     _gfx.print((String)systemBattery(), 196, 159, 8, 5);
 
-  
+
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
 /* task-function. system cursor output */
@@ -1553,8 +1553,9 @@ App commands[]
     
 
     //system graphics-task
-    {"systray",     "Tray",                systemTray,           true,    300, NULL, 0},
-    {"syscursor",   "Cursor",              systemCursor,         true,    301, NULL, 0},
+    {"sysledcontrol", "LED control",         NULL,                 false,   299, NULL, 0},
+    {"systray",       "Tray",                systemTray,           true,    300, NULL, 0},
+    {"syscursor",     "Cursor",              systemCursor,         true,    301, NULL, 0},
 };
 /* delete all commands */
 void clearCommandTerminal()
@@ -1701,7 +1702,7 @@ void myDesctop()
 
     
 
-    /*test led*/ _gfx.controlBacklight(true);
+    /*test led*/ //_gfx.controlBacklight(true);
 }
 /* test */
 void testApp()
