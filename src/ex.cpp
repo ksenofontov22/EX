@@ -134,7 +134,7 @@ void Graphics::initializationSystem()
     //setting the operating system state
     //setting display, contrast
     u8g2.begin(); Serial.begin(9600);
-    u8g2.setContrast(145); //143//150
+    u8g2.setContrast(143); //143//150
     //setting the resolution of the analog-to-digital converter
     analogReadResolution(RESOLUTION_ADC);
     //display backlight
