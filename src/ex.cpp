@@ -30,7 +30,7 @@ Shortcut _myConsole, _wifi;
 Cursor _crs; 
 PowerSave _pwsDeep; 
 Interface _mess; 
-Button _ok, _no, _collapse, _expand, _close, _ledControl;
+Button _ok, _no, _collapse, _expand, _close, _ledControl, _keys;
 TimeNTP _timentp; Task _task;
 Label _labelClock, _labelBattery, _labelWifi;
 
@@ -49,6 +49,7 @@ NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 void null();
 void clearCommandTerminal(); void testApp(); void myDesctop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
+void keyboard();
 
 
 enum StateOs
@@ -629,6 +630,45 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
 
   u8g2.setCursor(x + 3, y);
   u8g2.setFont(u8g2_font_profont10_mr);
+  u8g2.setFontMode(1);
+  u8g2.setDrawColor(2);
+  u8g2.print(text);
+  u8g2.setFontMode(0);
+  
+  return false;
+}
+
+bool Button::buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
+{
+  uint8_t sizeText = text.length();
+
+  if ((xCursor >= x && xCursor <= (x + (sizeText * 5) + 4)) && (yCursor >= y - 8 && yCursor <= y + 2))
+  {
+    u8g2.setDrawColor(1);
+    u8g2.drawRBox(x, y - 8, (sizeText * 5) + 5, 10, 2);
+
+    if (Joystick::pressKeyA() == true)
+    {
+      f();
+      return true;
+    }
+  }
+  else
+  {
+    u8g2.setDrawColor(1);
+    u8g2.drawRFrame(x, y - 8, (sizeText * 5) + 5, 10, 2);
+  }
+
+  u8g2.setCursor(x + 3, y);
+  if (sizeFont == 5) u8g2.setFont(u8g2_font_micro_tr);
+  else if (sizeFont == 6) u8g2.setFont(u8g2_font_4x6_tr);
+  else if (sizeFont == 7) u8g2.setFont(u8g2_font_5x7_tr);
+  else if (sizeFont == 8) u8g2.setFont(u8g2_font_5x8_tr);
+  else if (sizeFont == 10) u8g2.setFont(u8g2_font_6x10_tr);
+  else if (sizeFont == 12) u8g2.setFont(u8g2_font_6x12_tr);
+  else if (sizeFont == 13) u8g2.setFont(u8g2_font_6x13_tr);
+  else u8g2.setFont(u8g2_font_6x10_tr);
+  //u8g2.setFont(u8g2_font_profont10_mr);
   u8g2.setFontMode(1);
   u8g2.setDrawColor(2);
   u8g2.print(text);
@@ -1576,6 +1616,7 @@ App commands[]
     
 
     //system graphics-task
+    {"keyboard",      "Keyboard",            keyboard,             true,    298, NULL, 0},
     {"sysledcontrol", "LED control",         sustemLedControl,     true,    299, NULL, 0},
     {"systray",       "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",     "Cursor",              systemCursor,         true,    301, NULL, 0},
@@ -1773,4 +1814,173 @@ void myWifiConnect()
 
     /* IPAddress ip = WiFi.localIP();
     sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
+}
+
+
+/*Keyboard*/
+
+/*global variables of the keyboard*/
+char allKeyboards[4][30] = {{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', ' ', ' ', ' '},
+                            {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', ' ', ' ', ' '}, 
+                            {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 
+                            {'.', ',', '!', '?', '_', '+', '-', '*', '/', '%', '@', '(', ')', ':', ';', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}};
+int recentKeyboard = 0, symbolsRow = 0;
+String wordFromKeyboard = "", inputWord = "";
+bool isKeyboardActive;
+
+/*Add symbol from key to word*/
+void printKeyValue1()
+{
+    wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 0]);
+    delay(90);
+}
+void printKeyValue2()
+{
+    if (symbolsRow != 5)
+    {
+        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 1]);
+    }
+    delay(90);
+}
+void printKeyValue3()
+{
+    if (symbolsRow != 5)
+    {
+        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 2]);
+    }
+    delay(90);
+}
+void printKeyValue4()
+{
+    if (symbolsRow != 5)
+    {
+        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 3]);
+    }
+    delay(90);
+}
+void printKeyValue5()
+{
+    if (symbolsRow != 5)
+    {
+        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 4]);
+    }
+    delay(90);
+}
+
+/*Changes the visible symbols*/
+void chageSymbolsRowLeft()
+{
+    if (symbolsRow >= 1)
+    {
+        symbolsRow --;
+    }
+    delay(90);
+}
+void chageSymbolsRowRight()
+{
+    int x = 0;
+    if (recentKeyboard == 0 || recentKeyboard == 1)
+    {
+        x = 5;
+    }
+    else if (recentKeyboard == 2)
+    {
+        x = 1;
+    }
+    else
+    {
+        x = 2;
+    }
+    if (symbolsRow < x)
+    {
+        symbolsRow ++;
+    }
+    delay(90);
+}
+
+
+/*Change the keyboard layout*/
+void changeKeyboardType1()
+{
+    if (recentKeyboard == 0)
+    {
+        recentKeyboard = 1;
+    }
+    else{
+        recentKeyboard = 0;
+    }
+    symbolsRow = 0;
+    delay(90);
+}
+void changeKeyboardType2()
+{
+    recentKeyboard = 2;
+    symbolsRow = 0;
+    delay(90);
+}
+void changeKeyboardType3()
+{
+    recentKeyboard = 3;
+    symbolsRow = 0;
+    delay(90);
+}
+
+/*Function for delete button*/
+void deleteSymbol()
+{
+    wordFromKeyboard.remove(wordFromKeyboard.length() - 1);
+    delay(90);
+}
+
+/*Function for space button*/
+void spaceSymbol()
+{
+    wordFromKeyboard += " ";
+    delay(150);
+}
+
+/*Assigns the entered word to the one we return and ends the endless keyboard loop*/
+void Enter()
+{
+    isKeyboardActive = 0;
+    inputWord = wordFromKeyboard;
+    wordFromKeyboard = "";
+    _crs.cursor(false, _joy.posX0, _joy.posY0);
+    delay(150);
+}
+
+/*Function for keyboard rendering*/
+void showKeyboard()
+{
+    //_joy.updatePositionXY();
+    //_crs.cursor(true, _joy.posX0, _joy.posY0);
+
+    _keys.button("Aa", 0, 47, changeKeyboardType1, _joy.posX0, _joy.posY0);
+    _keys.button("123", 17, 47, changeKeyboardType2, _joy.posX0, _joy.posY0);
+    _keys.button("?!&", 39, 47, changeKeyboardType3, _joy.posX0, _joy.posY0);
+    _keys.button("spc", 61, 47, spaceSymbol, _joy.posX0, _joy.posY0);
+    _keys.button("ent", 83, 47, Enter, _joy.posX0, _joy.posY0);
+    _keys.button("<--", 108, 47, deleteSymbol, _joy.posX0, _joy.posY0);
+
+    _keys.button("<", 0, 58, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
+
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 0]), 15, 58, printKeyValue1, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 1]), 37, 58, printKeyValue2, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 2]), 59, 58, printKeyValue3, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 3]), 81, 58, printKeyValue4, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 4]), 103, 58, printKeyValue5, _joy.posX0, _joy.posY0);
+
+    _keys.button(">", 118, 58, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
+    _gfx.print(wordFromKeyboard, 30, 30);
+}
+
+/*starts the endless cycle, returns entered word*/
+void keyboard()
+{
+    isKeyboardActive = 1;
+    while (isKeyboardActive)
+    {
+        showKeyboard(); break;
+    }
+    //return inputWord;
 }
