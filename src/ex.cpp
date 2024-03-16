@@ -1954,24 +1954,25 @@ void showKeyboard()
 {
     //_joy.updatePositionXY();
     //_crs.cursor(true, _joy.posX0, _joy.posY0);
+    u8g2.drawRFrame(35, 50, 138, 58, 10);
 
-    _keys.button("Aa", 0, 47, changeKeyboardType1, _joy.posX0, _joy.posY0);
-    _keys.button("123", 17, 47, changeKeyboardType2, _joy.posX0, _joy.posY0);
-    _keys.button("?!&", 39, 47, changeKeyboardType3, _joy.posX0, _joy.posY0);
-    _keys.button("spc", 61, 47, spaceSymbol, _joy.posX0, _joy.posY0);
-    _keys.button("ent", 83, 47, Enter, _joy.posX0, _joy.posY0);
-    _keys.button("<--", 108, 47, deleteSymbol, _joy.posX0, _joy.posY0);
+    _keys.button("Aa", 0+40, 47+40, changeKeyboardType1, _joy.posX0, _joy.posY0);
+    _keys.button("123", 17+40, 47+40, changeKeyboardType2, _joy.posX0, _joy.posY0);
+    _keys.button("?!&", 39+40, 47+40, changeKeyboardType3, _joy.posX0, _joy.posY0);
+    _keys.button("spc", 61+40, 47+40, spaceSymbol, _joy.posX0, _joy.posY0);
+    _keys.button("ent", 83+40, 47+40, Enter, _joy.posX0, _joy.posY0);
+    _keys.button("<--", 108+40, 47+40, deleteSymbol, _joy.posX0, _joy.posY0);
 
-    _keys.button("<", 0, 58, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
+    _keys.button("<", 0+40, 58+40, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
 
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 0]), 15, 58, printKeyValue1, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 1]), 37, 58, printKeyValue2, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 2]), 59, 58, printKeyValue3, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 3]), 81, 58, printKeyValue4, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 4]), 103, 58, printKeyValue5, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 0]), 15+40, 58+40, printKeyValue1, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 1]), 37+40, 58+40, printKeyValue2, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 2]), 59+40, 58+40, printKeyValue3, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 3]), 81+40, 58+40, printKeyValue4, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 4]), 103+40, 58+40, printKeyValue5, _joy.posX0, _joy.posY0);
 
-    _keys.button(">", 118, 58, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
-    _gfx.print(wordFromKeyboard, 30, 30);
+    _keys.button(">", 118+40, 58+40, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
+    _gfx.print(wordFromKeyboard, 30+40, 30+40);
 }
 
 /*starts the endless cycle, returns entered word*/
