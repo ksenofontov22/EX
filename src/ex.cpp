@@ -1827,7 +1827,7 @@ char allKeyboards[4][30] = {{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', '
                             {'.', ',', '!', '?', '_', '+', '-', '*', '/', '%', '@', '(', ')', ':', ';', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}};
 int recentKeyboard = 0, symbolsRow = 0, kboardXPos = 59, kboardYPos = 59;
 String wordFromKeyboard = "", inputWord = "";
-bool isKeyboardShmoovin;
+bool isKeyboardMoving;
 
 /*Add symbol from key to word*/
 void printKeyValue1()
@@ -1957,23 +1957,18 @@ void moveKeyboard()
 {
     delay(300);
     
-    isKeyboardShmoovin = !isKeyboardShmoovin;
-    if (!isKeyboardShmoovin) {_task.taskKill(301);} else {_task.taskRun(301);}
+    isKeyboardMoving = !isKeyboardMoving;
 }
 
 /*Function for keyboard rendering*/
 void showKeyboard()
 {
-    if (isKeyboardShmoovin)
+    if (isKeyboardMoving)
     {
         _joy.updatePositionXY();
         _crs.cursor(true, _joy.posX0, _joy.posY0);
         kboardXPos = _joy.posX0-64;
         kboardYPos = _joy.posY0-18;
-        if (_joy.pressKeyENTER() == true)
-        {
-            moveKeyboard();
-        }
     }
     u8g2.drawRFrame(kboardXPos, 15+kboardYPos, 138, 55, 9);
 

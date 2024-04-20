@@ -15,11 +15,11 @@ Interface inf;
 void user_gfx_text()
 {
     //gfx.print("EX", 239, 10); //u8g2.sendBuffer();
-    String inputWord = "";
+    /*String inputWord = "";
     if (joy.pressKeyA() == true)
     {
         task.taskRun(298);
-    }
+    }*/
     //Serial.println("EX"); 
 }
 
@@ -30,7 +30,7 @@ void user_gfx_text()
 
 void setup()
 {  
-    userTrm.attach(1, user_gfx_text, 10);
+    //userTrm.attach(1, user_gfx_text, 10);
     //user_gfx_text();
     gfx.initializationSystem();
     //timentp.setupWifi("free", "");
@@ -41,5 +41,4 @@ void setup()
 void loop()
 {  
     trm.terminal(); 
-    user_gfx_text();
 }
