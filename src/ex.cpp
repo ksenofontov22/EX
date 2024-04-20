@@ -33,6 +33,7 @@ Interface _mess;
 Button _ok, _no, _collapse, _expand, _close, _ledControl, _keys;
 TimeNTP _timentp; Task _task;
 Label _labelClock, _labelBattery, _labelWifi;
+Keyboard _keyboard;
 
 /* WIFI */
 bool stateWifiSetup = false;
@@ -1616,7 +1617,7 @@ App commands[]
     
 
     //system graphics-task
-    {"keyboard",      "Keyboard",            keyboard,             true,    298, NULL, 0},
+    {"keyboard",      "Keyboard",            keyboard,             false,    298, NULL, 0},
     {"sysledcontrol", "LED control",         sustemLedControl,     true,    299, NULL, 0},
     {"systray",       "Tray",                systemTray,           true,    300, NULL, 0},
     {"syscursor",     "Cursor",              systemCursor,         true,    301, NULL, 0},
@@ -1826,7 +1827,7 @@ char allKeyboards[4][30] = {{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', '
                             {'.', ',', '!', '?', '_', '+', '-', '*', '/', '%', '@', '(', ')', ':', ';', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}};
 int recentKeyboard = 0, symbolsRow = 0, kboardXPos = 59, kboardYPos = 59;
 String wordFromKeyboard = "", inputWord = "";
-bool isKeyboardActive;
+bool isKeyboardShmoovin;
 
 /*Add symbol from key to word*/
 void printKeyValue1()
@@ -1945,7 +1946,7 @@ void spaceSymbol()
 /*Assigns the entered word to the one we return and ends the endless keyboard loop*/
 void Enter()
 {
-    isKeyboardActive = 0;
+    _task.taskKill(298);
     inputWord = wordFromKeyboard;
     wordFromKeyboard = "";
     _crs.cursor(false, _joy.posX0, _joy.posY0);
@@ -1954,21 +1955,26 @@ void Enter()
 
 void moveKeyboard()
 {
-    delay(50);
-    _joy.updatePositionXY();
-    if (_joy.pressKeyENTER() == true)
-    {
-        kboardXPos = _joy.posX0-65;
-        kboardYPos = _joy.posY0-21;
-    }
+    delay(300);
+    
+    isKeyboardShmoovin = !isKeyboardShmoovin;
+    if (!isKeyboardShmoovin) {_task.taskKill(301);} else {_task.taskRun(301);}
 }
 
 /*Function for keyboard rendering*/
 void showKeyboard()
 {
-    //_joy.updatePositionXY();
-    //_crs.cursor(true, _joy.posX0, _joy.posY0);+
-
+    if (isKeyboardShmoovin)
+    {
+        _joy.updatePositionXY();
+        _crs.cursor(true, _joy.posX0, _joy.posY0);
+        kboardXPos = _joy.posX0-64;
+        kboardYPos = _joy.posY0-18;
+        if (_joy.pressKeyENTER() == true)
+        {
+            moveKeyboard();
+        }
+    }
     u8g2.drawRFrame(kboardXPos, 15+kboardYPos, 138, 55, 9);
 
     _keys.button("Aa",  5+kboardXPos, 52+kboardYPos, changeKeyboardType1, _joy.posX0, _joy.posY0);
@@ -1995,10 +2001,6 @@ void showKeyboard()
 /*starts the endless cycle, returns entered word*/
 void keyboard()
 {
-    isKeyboardActive = 1;
-    while (isKeyboardActive)
-    {
-        showKeyboard(); break;
-    }
+    showKeyboard();
     //return inputWord;
 }
