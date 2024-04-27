@@ -11,15 +11,13 @@ TimeNTP timentp;
 Keyboard key;
 Task task;
 Interface inf;
+Textbox txtbox1, txtbox2;
 
 void user_gfx_text()
 {
     //gfx.print("EX", 239, 10); //u8g2.sendBuffer();
-    /*String inputWord = "";
-    if (joy.pressKeyA() == true)
-    {
-        task.taskRun(298);
-    }*/
+    txtbox1.textbox(80, 100, 80);
+    txtbox2.textbox(80, 100, 110);
     //Serial.println("EX"); 
 }
 
@@ -30,8 +28,8 @@ void user_gfx_text()
 
 void setup()
 {  
-    //userTrm.attach(1, user_gfx_text, 10);
-    //user_gfx_text();
+    userTrm.attach(1, user_gfx_text, 10);
+    user_gfx_text();
     gfx.initializationSystem();
     //timentp.setupWifi("free", "");
     //timentp.setupTime();
@@ -40,5 +38,5 @@ void setup()
 
 void loop()
 {  
-    trm.terminal(); 
+    trm.terminal(user_gfx_text); 
 }

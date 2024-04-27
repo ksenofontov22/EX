@@ -1993,9 +1993,42 @@ void showKeyboard()
     _keys.button("<->", 58+kboardXPos, 23+kboardYPos, moveKeyboard, _joy.posX0, _joy.posY0);
 }
 
-/*starts the endless cycle, returns entered word*/
 void keyboard()
 {
     showKeyboard();
     //return inputWord;
+}
+
+/*Textbox*/
+
+bool Textbox::textbox(int textboxSize, uint8_t x, uint8_t y )
+{
+    int xCursor = _joy.posX0;
+    int yCursor = _joy.posY0;
+    if ((xCursor > x && xCursor < (x + textboxSize + 4)) && (yCursor >= y-10 && yCursor <= y + 10))
+    {
+        BUFFER_STRING = "yes";
+        u8g2.setDrawColor(1);
+        u8g2.drawBox(x, y - 8, (textboxSize) + 5, 20);
+
+        if (Joystick::pressKeyENTER() == true)
+        {
+            _task.taskRun(298);
+            return true;
+        }
+    }
+    else
+    {
+        u8g2.setDrawColor(1);
+        u8g2.drawFrame(x, y - 8, (textboxSize) + 5, 20);
+    }
+    text = inputWord;
+    u8g2.setCursor(x + 3, y);
+    u8g2.setFont(u8g2_font_profont10_mr);
+    u8g2.print(text);
+    u8g2.setFontMode(1);
+    u8g2.setDrawColor(2);
+    u8g2.setFontMode(0);
+    
+    return false;
 }

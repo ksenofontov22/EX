@@ -403,4 +403,11 @@ class Keyboard
     private:
 };
 
+class Textbox : Joystick
+{
+public:
+    String text = "";
+    bool textbox(int textboxSize, uint8_t x, uint8_t y);
+};
+
 #endif
