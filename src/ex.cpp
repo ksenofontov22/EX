@@ -1827,6 +1827,7 @@ char allKeyboards[4][30] = {{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', '
 int recentKeyboard = 0, symbolsRow = 0;
 String wordFromKeyboard = "", inputWord = "";
 bool isKeyboardActive;
+char SYMBOL = ' ';
 
 /*Add symbol from key to word*/
 void printKeyValue1()
@@ -1865,6 +1866,12 @@ void printKeyValue5()
         wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 4]);
     }
     delay(90);
+}
+
+void printKeyValue()
+{
+    wordFromKeyboard += (String)SYMBOL;
+    SYMBOL = ' ';
 }
 
 /*Changes the visible symbols*/
@@ -1963,12 +1970,21 @@ void showKeyboard()
     _keys.button("<--", 108, 47, deleteSymbol, _joy.posX0, _joy.posY0);
 
     _keys.button("<", 0, 58, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
+    
+    for (int i = 97; i <= 101; i++)
+    {
+      for (int j = 0; j <= 4; j++)
+      {
+        _keys.buttonForKeyboard(8, (char)(i+j), 15 + 22*j, 58, printKeyValue, _joy.posX0, _joy.posY0);
+        SYMBOL = (char)(i+j);
+      }
+    }
 
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 0]), 15, 58, printKeyValue1, _joy.posX0, _joy.posY0);
+    /*_keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 0]), 15, 58, printKeyValue1, _joy.posX0, _joy.posY0);
     _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 1]), 37, 58, printKeyValue2, _joy.posX0, _joy.posY0);
     _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 2]), 59, 58, printKeyValue3, _joy.posX0, _joy.posY0);
     _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 3]), 81, 58, printKeyValue4, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 4]), 103, 58, printKeyValue5, _joy.posX0, _joy.posY0);
+    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 4]), 103, 58, printKeyValue5, _joy.posX0, _joy.posY0);*/
 
     _keys.button(">", 118, 58, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
     _gfx.print(wordFromKeyboard, 30, 30);
@@ -1987,4 +2003,13 @@ void keyboard()
 
 
 //KEYBOARD_NEW
+
+
+
+
+
+
+
+
+
 

@@ -399,7 +399,7 @@ public:
 class Keyboard
 {
     public:
-        //void keyboard();
+        void keyboard();
     private:
 };
 

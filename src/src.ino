@@ -10,7 +10,7 @@ UserTerminal <5> userTrm;
 TimeNTP timentp;
 Keyboard key;
 
-/*void user_gfx_text()
+void user_gfx_text()
 {
     //gfx.print("EX", 239, 10); //u8g2.sendBuffer();
     String inputWord = "";
@@ -23,7 +23,7 @@ Keyboard key;
 void user_terminal()
 {
     userTrm.tick();
-}*/
+}
 
 void setup()
 {  
