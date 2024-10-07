@@ -145,7 +145,7 @@ public:
     /* Return boolean state */
     bool button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
     /**/
-    bool buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
+    bool buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t xCursor, uint8_t yCursor);
 };
 
 class Shortcut : Joystick

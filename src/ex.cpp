@@ -638,7 +638,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   return false;
 }
 
-bool Button::buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
+bool Button::buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t xCursor, uint8_t yCursor)
 {
   uint8_t sizeText = text.length();
 
@@ -647,7 +647,7 @@ bool Button::buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, 
     u8g2.setDrawColor(1);
     u8g2.drawRBox(x, y - 8, (sizeText * 5) + 5, 10, 2);
 
-    if (Joystick::pressKeyA() == true)
+    if (Joystick::pressKeyENTER() == true)
     {
       f();
       return true;
@@ -1820,58 +1820,19 @@ void myWifiConnect()
 /*Keyboard*/
 
 /*global variables of the keyboard*/
-char allKeyboards[4][30] = {{'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ', ' ', ' ', ' '},
-                            {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', ' ', ' ', ' ', ' '}, 
-                            {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}, 
-                            {'.', ',', '!', '?', '_', '+', '-', '*', '/', '%', '@', '(', ')', ':', ';', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '}};
-int recentKeyboard = 0, symbolsRow = 0;
+char allKeyboards[20] = {'.', ',', '!', '?', '_', '+', '-', '*', '/', '%', '@', ':', ';', '=', '(', ')', '{', '}', '<', '>'};
+int recentKeyboard = 0, symbolsRow = 0, ascii_point = 97;
 String wordFromKeyboard = "", inputWord = "";
 bool isKeyboardActive;
 char SYMBOL = ' ';
 
 /*Add symbol from key to word*/
-void printKeyValue1()
-{
-    wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 0]);
-    delay(90);
-}
-void printKeyValue2()
-{
-    if (symbolsRow != 5)
-    {
-        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 1]);
-    }
-    delay(90);
-}
-void printKeyValue3()
-{
-    if (symbolsRow != 5)
-    {
-        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 2]);
-    }
-    delay(90);
-}
-void printKeyValue4()
-{
-    if (symbolsRow != 5)
-    {
-        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 3]);
-    }
-    delay(90);
-}
-void printKeyValue5()
-{
-    if (symbolsRow != 5)
-    {
-        wordFromKeyboard += String(allKeyboards[recentKeyboard][5*symbolsRow + 4]);
-    }
-    delay(90);
-}
 
 void printKeyValue()
 {
     wordFromKeyboard += (String)SYMBOL;
     SYMBOL = ' ';
+    delay(100);
 }
 
 /*Changes the visible symbols*/
@@ -1911,17 +1872,20 @@ void changeKeyboardType1()
 {
     if (recentKeyboard == 0)
     {
+        ascii_point = 65;
         recentKeyboard = 1;
     }
     else{
+        ascii_point = 97;
         recentKeyboard = 0;
     }
     symbolsRow = 0;
-    delay(90);
+    delay(190);
 }
 void changeKeyboardType2()
 {
     recentKeyboard = 2;
+    ascii_point = 48;
     symbolsRow = 0;
     delay(90);
 }
@@ -1962,32 +1926,22 @@ void showKeyboard()
     //_joy.updatePositionXY();
     //_crs.cursor(true, _joy.posX0, _joy.posY0);
 
-    _keys.button("Aa", 0, 47, changeKeyboardType1, _joy.posX0, _joy.posY0);
-    _keys.button("123", 17, 47, changeKeyboardType2, _joy.posX0, _joy.posY0);
-    _keys.button("?!&", 39, 47, changeKeyboardType3, _joy.posX0, _joy.posY0);
-    _keys.button("spc", 61, 47, spaceSymbol, _joy.posX0, _joy.posY0);
-    _keys.button("ent", 83, 47, Enter, _joy.posX0, _joy.posY0);
-    _keys.button("<--", 108, 47, deleteSymbol, _joy.posX0, _joy.posY0);
+    _keys.button("Aa", 0, 127, changeKeyboardType1, _joy.posX0, _joy.posY0);
+    _keys.button("123", 18, 127, changeKeyboardType2, _joy.posX0, _joy.posY0);
+    _keys.button("?!&", 41, 127, changeKeyboardType3, _joy.posX0, _joy.posY0);
+    _keys.button("spc", 64, 127, spaceSymbol, _joy.posX0, _joy.posY0);
+    _keys.button("ent", 87, 127, Enter, _joy.posX0, _joy.posY0);
+    _keys.button("<--", 111, 127, deleteSymbol, _joy.posX0, _joy.posY0);
 
-    _keys.button("<", 0, 58, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
-    
-    for (int i = 97; i <= 101; i++)
+    _keys.button("<", 0, 138, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
+    for (int j = 0; j <= 9; j++)
     {
-      for (int j = 0; j <= 4; j++)
-      {
-        _keys.buttonForKeyboard(8, (char)(i+j), 15 + 22*j, 58, printKeyValue, _joy.posX0, _joy.posY0);
-        SYMBOL = (char)(i+j);
-      }
+      _keys.buttonForKeyboard(8, (String)(char)(j+ascii_point+10*symbolsRow), 11 + 11*j, 138, printKeyValue, _joy.posX0, _joy.posY0);
+      SYMBOL = (char)(j+ascii_point+10*symbolsRow);
     }
+    _keys.button(">", 121, 138, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
 
-    /*_keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 0]), 15, 58, printKeyValue1, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 1]), 37, 58, printKeyValue2, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 2]), 59, 58, printKeyValue3, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 3]), 81, 58, printKeyValue4, _joy.posX0, _joy.posY0);
-    _keys.buttonForKeyboard(8, String(allKeyboards[recentKeyboard][5*symbolsRow + 4]), 103, 58, printKeyValue5, _joy.posX0, _joy.posY0);*/
-
-    _keys.button(">", 118, 58, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
-    _gfx.print(wordFromKeyboard, 30, 30);
+    _gfx.print(wordFromKeyboard, 30, 107);
 }
 
 /*starts the endless cycle, returns entered word*/
