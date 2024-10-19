@@ -638,9 +638,9 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   return false;
 }
 
-bool Button::buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t xCursor, uint8_t yCursor)
+bool Button::buttonForKeyboard(int sizeFont, char symbol, uint8_t x, uint8_t y, void (*f)(void), uint8_t xCursor, uint8_t yCursor)
 {
-  uint8_t sizeText = text.length();
+  uint8_t sizeText = 1;
 
   if ((xCursor >= x && xCursor <= (x + (sizeText * 5) + 4)) && (yCursor >= y - 8 && yCursor <= y + 2))
   {
@@ -671,7 +671,7 @@ bool Button::buttonForKeyboard(int sizeFont, String text, uint8_t x, uint8_t y, 
   //u8g2.setFont(u8g2_font_profont10_mr);
   u8g2.setFontMode(1);
   u8g2.setDrawColor(2);
-  u8g2.print(text);
+  u8g2.print((String)symbol);
   u8g2.setFontMode(0);
   
   return false;
@@ -1820,7 +1820,10 @@ void myWifiConnect()
 /*Keyboard*/
 
 /*global variables of the keyboard*/
-char allKeyboards[20] = {'.', ',', '!', '?', '_', '+', '-', '*', '/', '%', '@', ':', ';', '=', '(', ')', '{', '}', '<', '>'};
+int allKeyboards[20] = {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'y', 'v', 'w', 'x', 'y', 'z', ' ', ' ', ' ', ' '],
+                        ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'Y', 'V', 'W', 'X', 'Y', 'Z', ' ', ' ', ' ', ' '],
+                        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
+                        ['.', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'y', 'v', 'w', 'x', 'y', 'z', ' ', ' ', ' ', ' ']};
 int recentKeyboard = 0, symbolsRow = 0, ascii_point = 97;
 String wordFromKeyboard = "", inputWord = "";
 bool isKeyboardActive;
@@ -1830,9 +1833,9 @@ char SYMBOL = ' ';
 
 void printKeyValue()
 {
-    wordFromKeyboard += (String)SYMBOL;
+    wordFromKeyboard += (char)((int)SYMBOL+1);
     SYMBOL = ' ';
-    delay(100);
+    delay(200);
 }
 
 /*Changes the visible symbols*/
@@ -1842,28 +1845,17 @@ void chageSymbolsRowLeft()
     {
         symbolsRow --;
     }
-    delay(90);
+    delay(150);
 }
 void chageSymbolsRowRight()
 {
-    int x = 0;
-    if (recentKeyboard == 0 || recentKeyboard == 1)
-    {
-        x = 5;
-    }
-    else if (recentKeyboard == 2)
-    {
-        x = 1;
-    }
-    else
-    {
-        x = 2;
-    }
-    if (symbolsRow < x)
-    {
-        symbolsRow ++;
-    }
-    delay(90);
+    int x;
+
+    if (ascii_point == 65 || ascii_point == 97) { x = 2; }
+    else if (ascii_point == 48) { x = 0;}
+    else { x = 1;}
+    if (symbolsRow < x) {symbolsRow++;}
+    delay(150);
 }
 
 
@@ -1887,20 +1879,20 @@ void changeKeyboardType2()
     recentKeyboard = 2;
     ascii_point = 48;
     symbolsRow = 0;
-    delay(90);
+    delay(150);
 }
 void changeKeyboardType3()
 {
     recentKeyboard = 3;
     symbolsRow = 0;
-    delay(90);
+    delay(150);
 }
 
 /*Function for delete button*/
 void deleteSymbol()
 {
     wordFromKeyboard.remove(wordFromKeyboard.length() - 1);
-    delay(90);
+    delay(150);
 }
 
 /*Function for space button*/
@@ -1934,11 +1926,14 @@ void showKeyboard()
     _keys.button("<--", 111, 127, deleteSymbol, _joy.posX0, _joy.posY0);
 
     _keys.button("<", 0, 138, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
+
+    int recentSymbol;
     for (int j = 0; j <= 9; j++)
     {
-      _keys.buttonForKeyboard(8, (String)(char)(j+ascii_point+10*symbolsRow), 11 + 11*j, 138, printKeyValue, _joy.posX0, _joy.posY0);
-      SYMBOL = (char)(j+ascii_point+10*symbolsRow);
+      _keys.buttonForKeyboard(8, (char)recentSymbol, 11 + 11*j, 138, printKeyValue, _joy.posX0, _joy.posY0); 
+      SYMBOL = (char)(recentSymbol);
     }
+
     _keys.button(">", 121, 138, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
 
     _gfx.print(wordFromKeyboard, 30, 107);
@@ -1955,8 +1950,6 @@ void keyboard()
     //return inputWord;
 }
 
-
-//KEYBOARD_NEW
 
 
 
