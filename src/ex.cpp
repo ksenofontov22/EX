@@ -1827,14 +1827,14 @@ int allKeyboards[20] = {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 
 int recentKeyboard = 0, symbolsRow = 0, ascii_point = 97;
 String wordFromKeyboard = "", inputWord = "";
 bool isKeyboardActive;
-char SYMBOL = ' ';
+char SYMBOL = (char)0;
 
 /*Add symbol from key to word*/
 
 void printKeyValue()
 {
-    wordFromKeyboard += (char)((int)SYMBOL+1);
-    SYMBOL = ' ';
+    wordFromKeyboard += SYMBOL;
+    SYMBOL = (char)0;
     delay(200);
 }
 
@@ -1927,11 +1927,10 @@ void showKeyboard()
 
     _keys.button("<", 0, 138, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
 
-    int recentSymbol;
     for (int j = 0; j <= 9; j++)
     {
-      _keys.buttonForKeyboard(8, (char)recentSymbol, 11 + 11*j, 138, printKeyValue, _joy.posX0, _joy.posY0); 
-      SYMBOL = (char)(recentSymbol);
+      _keys.buttonForKeyboard(8, allKeyboards[recentKeyboard[j+10*symbolsRow]], 11 + 11*j, 138, printKeyValue, _joy.posX0, _joy.posY0);
+      if (allKeyboards[recentKeyboard[j+10*symbolsRow] != ' ') {SYMBOL = allKeyboards[recentKeyboard[j+10*symbolsRow]];}
     }
 
     _keys.button(">", 121, 138, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
