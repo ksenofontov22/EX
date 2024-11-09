@@ -1820,11 +1820,11 @@ void myWifiConnect()
 /*Keyboard*/
 
 /*global variables of the keyboard*/
-int allKeyboards[20] = {['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'y', 'v', 'w', 'x', 'y', 'z', ' ', ' ', ' ', ' '],
-                        ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'Y', 'V', 'W', 'X', 'Y', 'Z', ' ', ' ', ' ', ' '],
-                        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '],
-                        ['.', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'y', 'v', 'w', 'x', 'y', 'z', ' ', ' ', ' ', ' ']};
-int recentKeyboard = 0, symbolsRow = 0, ascii_point = 97;
+int allKeyboards[4][30] = { {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'y', 'v', 'w', 'x', 'y', 'z', ' ', ' ', ' ', ' '},
+                            {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'Y', 'V', 'W', 'X', 'Y', 'Z', ' ', ' ', ' ', ' '},
+                            {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+                            {'.', ',', '!', '?', '+', '-', '*', '/', ':', ';', '{', '}', '(', ')', '[', ']', '%', '#', '@', '~', '_', '|', '№', '<', '>', '`', ' ', ' ', ' ', ' '} };
+int recentKeyboard = 0, symbolsRow = 0;
 String wordFromKeyboard = "", inputWord = "";
 bool isKeyboardActive;
 char SYMBOL = (char)0;
@@ -1834,50 +1834,33 @@ char SYMBOL = (char)0;
 void printKeyValue()
 {
     wordFromKeyboard += SYMBOL;
-    SYMBOL = (char)0;
+    SYMBOL = ' ';
     delay(200);
 }
 
 /*Changes the visible symbols*/
 void chageSymbolsRowLeft()
 {
-    if (symbolsRow >= 1)
-    {
-        symbolsRow --;
-    }
+    if (symbolsRow >= 1) { symbolsRow--; }
     delay(150);
 }
 void chageSymbolsRowRight()
 {
-    int x;
-
-    if (ascii_point == 65 || ascii_point == 97) { x = 2; }
-    else if (ascii_point == 48) { x = 0;}
-    else { x = 1;}
-    if (symbolsRow < x) {symbolsRow++;}
+    if ((symbolsRow == 0 || symbolsRow == 1 || symbolsRow == 3) && symbolsRow < 2) { symbolsRow++; }
     delay(150);
 }
-
 
 /*Change the keyboard layout*/
 void changeKeyboardType1()
 {
-    if (recentKeyboard == 0)
-    {
-        ascii_point = 65;
-        recentKeyboard = 1;
-    }
-    else{
-        ascii_point = 97;
-        recentKeyboard = 0;
-    }
+    if (recentKeyboard == 0) { recentKeyboard = 1; }
+    else { recentKeyboard = 0; }
     symbolsRow = 0;
     delay(190);
 }
 void changeKeyboardType2()
 {
     recentKeyboard = 2;
-    ascii_point = 48;
     symbolsRow = 0;
     delay(150);
 }
@@ -1915,27 +1898,31 @@ void Enter()
 /*Function for keyboard rendering*/
 void showKeyboard()
 {
-    //_joy.updatePositionXY();
-    //_crs.cursor(true, _joy.posX0, _joy.posY0);
-
-    _keys.button("Aa", 0, 127, changeKeyboardType1, _joy.posX0, _joy.posY0);
-    _keys.button("123", 18, 127, changeKeyboardType2, _joy.posX0, _joy.posY0);
-    _keys.button("?!&", 41, 127, changeKeyboardType3, _joy.posX0, _joy.posY0);
-    _keys.button("spc", 64, 127, spaceSymbol, _joy.posX0, _joy.posY0);
-    _keys.button("ent", 87, 127, Enter, _joy.posX0, _joy.posY0);
-    _keys.button("<--", 111, 127, deleteSymbol, _joy.posX0, _joy.posY0);
-
-    _keys.button("<", 0, 138, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
+    // add x and y to locate keyboard
+    int x = 63;
+    _keys.button("Aa", 0+x, 127, changeKeyboardType1, _joy.posX0, _joy.posY0);
+    _keys.button("123", 18+x, 127, changeKeyboardType2, _joy.posX0, _joy.posY0);
+    _keys.button("?!&", 41+x, 127, changeKeyboardType3, _joy.posX0, _joy.posY0);
+    _keys.button("spc", 64+x, 127, spaceSymbol, _joy.posX0, _joy.posY0);
+    _keys.button("ent", 87+x, 127, Enter, _joy.posX0, _joy.posY0);
+    _keys.button("<--", 111+x, 127, deleteSymbol, _joy.posX0, _joy.posY0);
+    //----------------------------------------------
+    _keys.button("<", 0+x, 138, chageSymbolsRowLeft, _joy.posX0, _joy.posY0);
+    //----------------------------------------------
 
     for (int j = 0; j <= 9; j++)
     {
-      _keys.buttonForKeyboard(8, allKeyboards[recentKeyboard[j+10*symbolsRow]], 11 + 11*j, 138, printKeyValue, _joy.posX0, _joy.posY0);
-      if (allKeyboards[recentKeyboard[j+10*symbolsRow] != ' ') {SYMBOL = allKeyboards[recentKeyboard[j+10*symbolsRow]];}
+        SYMBOL = allKeyboards[recentKeyboard][j + 10*symbolsRow];
+        if (SYMBOL != ' ')
+        {
+            _keys.buttonForKeyboard(8, allKeyboards[recentKeyboard][j + 10*symbolsRow], 11+x + 11*j, 138, printKeyValue, _joy.posX0, _joy.posY0); 
+        }
     }
 
-    _keys.button(">", 121, 138, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
-
-    _gfx.print(wordFromKeyboard, 30, 107);
+    //----------------------------------------------
+    _keys.button(">", 121+x, 138, chageSymbolsRowRight, _joy.posX0, _joy.posY0);
+    //----------------------------------------------
+    _gfx.print(wordFromKeyboard, 30+x, 107);
 }
 
 /*starts the endless cycle, returns entered word*/
